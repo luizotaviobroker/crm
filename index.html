@@ -900,7 +900,7 @@ table.grid tr.tgrp td.c-nome{border-left-width:4px;border-left-style:solid}
         <div><h1 id="hello">Bom dia, Luiz</h1><div class="hint" id="todayLbl"></div></div>
       </div>
       <div id="prospHome"></div>
-      <div class="box" id="prodBox" style="margin-bottom:16px"><div class="bh"><h2>Produtividade de hoje</h2><span class="hint">meta: 100 ligadas · 30 faladas</span></div><div class="kpis" id="prod" style="margin:0"></div><div class="pbar"><i id="prodBar"></i></div></div>
+      <div class="box" id="prodBox" style="margin-bottom:16px"><div class="bh"><h2>Produtividade de hoje</h2><span class="hint">meta: 20 ligadas · 6 faladas</span></div><div class="kpis" id="prod" style="margin:0"></div><div class="pbar"><i id="prodBar"></i></div></div>
       <div hidden><span id="actCount"></span><div id="acts"></div><span id="pendCount"></span><div id="pend"></div></div>
       <div class="head methead" id="v-metricas">
         <h1 style="font-size:22px">Métricas</h1>
@@ -1327,7 +1327,7 @@ function renderInicio(){
   const novosHoje=all.filter(c=>dayOf(c.criado)===t0).length;
   const nLig=ligCRM.length+ligProsp.length+atHoje.length;
   const falProsp=ligProsp.filter(x=>['atendeu','agendou','sem'].includes(x.s)).length;
-  $('prod').innerHTML=[[nLig,'Ligações e contatos hoje (meta 100)','lig'],[falProsp,'Faladas na prospecção (meta 30)'],[atHoje.length,'Atendimentos'],[ligProsp.length,'Ligações da prospecção'],[novosHoje,'Clientes novos no CRM'],[movHoje,'Mudanças de etapa']].map(([v,l,k])=>`<div class="kpi ${k||''}"><b>${v}</b><span>${l}</span></div>`).join('');
+  $('prod').innerHTML=[[nLig,'Ligações e contatos hoje (meta 20)','lig'],[falProsp,'Faladas na prospecção (meta 6)'],[atHoje.length,'Atendimentos'],[ligProsp.length,'Ligações da prospecção'],[novosHoje,'Clientes novos no CRM'],[movHoje,'Mudanças de etapa']].map(([v,l,k])=>`<div class="kpi ${k||''}"><b>${v}</b><span>${l}</span></div>`).join('');
   $('prodBar').style.width=Math.min(100,nLig/100*100)+'%';
   // atendimentos por dia
   const days=new Date(m.getFullYear(),m.getMonth()+1,0).getDate();const per=Array.from({length:days},()=>0),lig=Array.from({length:days},()=>0);
@@ -1505,8 +1505,9 @@ $('grid').addEventListener('click',e=>{const t=e.target.closest('[data-tgrp]');i
 const _sv=p=>`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px">${p}</svg>`;
 const SVG_UD=_sv('<path d="M8 4v16M4 8l4-4 4 4M16 20V4M12 16l4 4 4-4"/>'),SVG_UP=_sv('<path d="M12 20V4M6 10l6-6 6 6"/>'),SVG_DN=_sv('<path d="M12 4v16M6 14l6 6 6-6"/>');
 // versões do sistema
-const APP_VER='4.2';
+const APP_VER='4.3';
 const VERSOES=[
+ ['4.3','13/11/2026','Meta diária: 20 ligações (e 6 faladas)'],
  ['4.2','13/11/2026','Agenda: a observação da prospecção (amarela) aparece também nas visitas que já foram para o CRM'],
  ['4.1','13/11/2026','Visitas vão sozinhas para a agenda CRM Ginco no Google Agenda'],
  ['4.0','13/11/2026','App próprio (Firebase): funciona no iPad, iPhone e PC ao mesmo tempo, com login Google e dados sincronizados'],
@@ -1900,7 +1901,7 @@ function renderMetricas(){
   const reach=e=>all.filter(c=>(c.log||[]).some(l=>(Array.isArray(e)?e.includes(l.etapa):l.etapa===e)&&inR(l.t)));
   const ag=reach('Agendou'),vi=reach(['Visitou','Foi na área/maquete']),pr=reach('Proposta'),ga=reach('Ganho'),im=reach('Impedido');
   const vGa=ga.reduce((s,c)=>s+(+c.valor||0),0);
-  $('mAct').innerHTML=[[lig,'Ligações',`${(lig/Math.max(1,uteis)).toFixed(1)} por dia útil · meta 100`],[at,'Atendimentos',`${(at/Math.max(1,uteis)).toFixed(1)} por dia útil`],[pc.length,'Ligações da prospecção',`${pc.filter(x=>['atendeu','agendou','sem'].includes(x.s)).length} faladas · ${(pc.filter(x=>['atendeu','agendou','sem'].includes(x.s)).length/Math.max(1,uteis)).toFixed(1)} por dia útil (meta 30)`],[ligCRM,'Ligações na carteira','registradas nas fichas'],[novos.length,'Clientes novos','entraram no CRM']].map(([v,l,s2])=>`<div class="kpi"><b>${v}</b><span>${l}</span><small>${s2}</small></div>`).join('');
+  $('mAct').innerHTML=[[lig,'Ligações',`${(lig/Math.max(1,uteis)).toFixed(1)} por dia útil · meta 20`],[at,'Atendimentos',`${(at/Math.max(1,uteis)).toFixed(1)} por dia útil`],[pc.length,'Ligações da prospecção',`${pc.filter(x=>['atendeu','agendou','sem'].includes(x.s)).length} faladas · ${(pc.filter(x=>['atendeu','agendou','sem'].includes(x.s)).length/Math.max(1,uteis)).toFixed(1)} por dia útil (meta 6)`],[ligCRM,'Ligações na carteira','registradas nas fichas'],[novos.length,'Clientes novos','entraram no CRM']].map(([v,l,s2])=>`<div class="kpi"><b>${v}</b><span>${l}</span><small>${s2}</small></div>`).join('');
   $('mFun').innerHTML=[[ag.length,'Agendaram'],[vi.length,'Visitaram'],[pr.length,'Propostas'],[ga.length,'Ganhos'],[im.length,'Impedidos']].map(([v,l])=>`<div class="kpi"><b>${v}</b><span>${l}</span></div>`).join('')+`<div class="kpi money"><b>${brl(vGa)}</b><span>Vendido no período</span>${ga.length&&!vGa?'<small>Preencha o Valor dos ganhos</small>':''}</div>`;
   // conversão
   const steps=[['Ligações',lig],['Atendimentos',at],['Agendaram',ag.length],['Visitaram',vi.length],['Propostas',pr.length],['Ganhos',ga.length]];
@@ -2038,7 +2039,7 @@ const SUBS=[['retornar','Retornar'],['agendou','Agendou visita'],['sem','Sem int
 const STL=Object.assign(Object.fromEntries(STATUS),Object.fromEntries(SUBS));
 // falada = atendeu (marcações antigas "agendou" e "sem interesse" também contam como conversa)
 const FAL=s=>s==='atendeu'||s==='retornar'||s==='agendou'||s==='sem';const matchSt=(s,k)=>k==='atendeu'?FAL(s):s===k;const GRP=s=>FAL(s)?'atendeu':s;
-const META_LIG=100,META_FAL=30;
+const META_LIG=20,META_FAL=6;
 const SIT={'01':'Nula','02':'Ativa','03':'Suspensa','04':'Inapta','08':'Baixada'};
 const PORTE={'00':'Não informado','01':'ME','03':'EPP','05':'Demais'};
 const SELO={l:'Da lista',d:'Provável dono',c:'Contador',e:'Da empresa',r:'Repetido'};
@@ -2745,7 +2746,7 @@ function renderCal(){
   const late=Object.entries(R).filter(([k])=>k<t).reduce((n,[,a])=>n+a.length,0);
   const in7=new Date(t+'T12:00');in7.setDate(in7.getDate()+7);const k7=in7.toLocaleDateString('sv');
   const next=Object.entries(R).filter(([k])=>k>=t&&k<=k7).reduce((n,[,a])=>n+a.length,0);
-  $('msum').innerHTML=[[lig,'ligações no mês'],[fal,'faladas'+(lig?' · '+Math.round(fal/lig*100)+'%':'')],[worked?Math.round(lig/worked):0,'por dia trabalhado'],[hit+'/'+worked,'dias com meta de 100'],[Object.keys(V).filter(k=>k.startsWith(calM)).reduce((n,k)=>n+V[k].length,0),'visitas agendadas no mês'],[Object.values(LEADS).reduce((n,L)=>n+(L.disp||[]).filter(t=>dayOf(t).startsWith(calM)).length,0),'disparos de WhatsApp no mês'],[next,'retornos nos próximos 7 dias'],[late,'retornos atrasados']]
+  $('msum').innerHTML=[[lig,'ligações no mês'],[fal,'faladas'+(lig?' · '+Math.round(fal/lig*100)+'%':'')],[worked?Math.round(lig/worked):0,'por dia trabalhado'],[hit+'/'+worked,'dias com meta de 20'],[Object.keys(V).filter(k=>k.startsWith(calM)).reduce((n,k)=>n+V[k].length,0),'visitas agendadas no mês'],[Object.values(LEADS).reduce((n,L)=>n+(L.disp||[]).filter(t=>dayOf(t).startsWith(calM)).length,0),'disparos de WhatsApp no mês'],[next,'retornos nos próximos 7 dias'],[late,'retornos atrasados']]
     .map(([v,l],i)=>`<div class="ms${i===7&&late?' bad':''}"><b>${v}</b><span>${l}</span></div>`).join('');
 }
 const SECOFF=new Set(store.get('pvg_secoff',[]));
