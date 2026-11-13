@@ -15,7 +15,10 @@ const gate = $g('authGate'), msg = $g('agMsg'), btn = $g('agIn');
 const say = t => { if (msg) msg.textContent = t; };
 
 // ---------- dados ----------
-const clean = v => { if (!v) return v; const o = Object.assign({}, v); delete o._u; delete o._del; return o; };
+// o Firestore não aceita lista dentro de lista: esses documentos vão guardados como texto (_j)
+const hasNested = (v, inArr) => Array.isArray(v) ? (inArr || v.some(x => hasNested(x, true))) : (v && typeof v === 'object') ? Object.values(v).some(x => hasNested(x, false)) : false;
+const enc = v => hasNested(v, false) ? { _j: JSON.stringify(v) } : v;
+const clean = v => { if (!v) return v; if (typeof v._j === 'string') { try { return JSON.parse(v._j); } catch (x) { return null; } } const o = Object.assign({}, v); delete o._u; delete o._del; return o; };
 const ms = t => (t && typeof t.toMillis === 'function') ? t.toMillis() : 0;
 
 // um "motor" por coleção: começa pelo que já está guardado no aparelho e escuta só as mudanças
@@ -51,7 +54,7 @@ function ref(path) {
   return {
     id: r.id,
     async get() { let s; try { s = await getDoc(r); } catch (x) { s = null; } const v = s && s.exists() ? s.data() : null; return { id: r.id, exists: !!(v && !v._del), data: () => clean(v) }; },
-    set: v => { local(path, v); return setDoc(r, Object.assign({}, v, { _u: serverTimestamp() })); },
+    set: v => { local(path, enc(v)); return setDoc(r, Object.assign({}, enc(v), { _u: serverTimestamp() })); },
     update: v => setDoc(r, Object.assign({}, v, { _u: serverTimestamp() }), { merge: true }),
     delete: () => { local(path, { _del: true }); return setDoc(r, { _del: true, _u: serverTimestamp() }); },
     onSnapshot: (cb, err) => onSnapshot(r, s => { const v = s.exists() ? s.data() : null; cb({ id: r.id, exists: !!(v && !v._del), data: () => clean(v) }); }, err)
@@ -75,11 +78,11 @@ async function importBackup(file) {
   let n = 0;
   for (let i = 0; i < items.length; i += 400) {
     const b = writeBatch(fs);
-    for (const [c, id, v] of items.slice(i, i + 400)) b.set(doc(fs, c, id), Object.assign({}, v, { _u: serverTimestamp() }));
+    for (const [c, id, v] of items.slice(i, i + 400)) b.set(doc(fs, c, id), Object.assign({}, enc(v), { _u: serverTimestamp() }));
     await b.commit(); n += Math.min(400, items.length - i); say(`Importando… ${n} de ${items.length}`);
   }
   say(`Pronto: ${items.length} registros importados. Abrindo o CRM…`);
-  setTimeout(() => location.reload(), 900);
+  setTimeout(() => { location.href = location.pathname; }, 900);
 }
 
 // ---------- login ----------
@@ -88,12 +91,13 @@ async function start(user) {
   if (started) return; started = true;
   say('Carregando seus dados…'); btn.hidden = true;
   const cli = engine('clientes'); await cli.ready;
-  if (!cli.map.size) {
+  if (!cli.map.size || /[?&]importar/.test(location.search)) {
     // banco vazio: oferece importar o backup
-    say(`Olá, ${user.displayName || user.email}. Seu banco ainda está vazio. Escolha o arquivo de backup (crm-backup.json) para trazer seus clientes e leads.`);
+    say(cli.map.size ? `Importar backup: os registros do arquivo substituem os que têm o mesmo código. Escolha o crm-backup.json.` : `Olá, ${user.displayName || user.email}. Seu banco ainda está vazio. Escolha o arquivo de backup (crm-backup.json) para trazer seus clientes e leads.`);
     const inp = $g('agFile'); $g('agImp').hidden = false;
     inp.onchange = () => { const f = inp.files && inp.files[0]; if (f) importBackup(f).catch(x => { console.error(x); say('Não consegui importar: ' + (x.message || x)); }); };
     $g('agSkip').onclick = () => { gate.hidden = true; window.__setDb(DB); };
+    if (cli.map.size) $g('agSkip').textContent = 'Voltar ao CRM sem importar';
     return;
   }
   gate.hidden = true;
