@@ -971,7 +971,7 @@ table.grid tr.tgrp td.c-nome{border-left-width:4px;border-left-style:solid}
       </div>
       <div class="chips" id="aChips"></div>
       <div id="aBody"></div>
-      <div class="box" style="margin-top:16px" id="aDayBox"><div class="bh"><h2 id="dayTitle"></h2></div><div class="scroll" id="dayList" style="max-height:none"></div></div>
+      <div class="box" style="margin-top:16px" id="aDayBox"><div class="bh"><h2 id="dayTitle"></h2><button class="btn sm primary" type="button" id="dayHoje" hidden>Voltar para hoje</button></div><div class="scroll" id="dayList" style="max-height:none"></div></div>
     </section>
 
     <!-- PROSPECÇÃO -->
@@ -1505,8 +1505,9 @@ $('grid').addEventListener('click',e=>{const t=e.target.closest('[data-tgrp]');i
 const _sv=p=>`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px">${p}</svg>`;
 const SVG_UD=_sv('<path d="M8 4v16M4 8l4-4 4 4M16 20V4M12 16l4 4 4-4"/>'),SVG_UP=_sv('<path d="M12 20V4M6 10l6-6 6 6"/>'),SVG_DN=_sv('<path d="M12 4v16M6 14l6 6 6-6"/>');
 // versões do sistema
-const APP_VER='4.3';
+const APP_VER='4.4';
 const VERSOES=[
+ ['4.4','13/11/2026','Agenda abre sempre no dia de hoje; botão Voltar para hoje quando outro dia está selecionado'],
  ['4.3','13/11/2026','Meta diária: 20 ligações (e 6 faladas)'],
  ['4.2','13/11/2026','Agenda: a observação da prospecção (amarela) aparece também nas visitas que já foram para o CRM'],
  ['4.1','13/11/2026','Visitas vão sozinhas para a agenda CRM Ginco no Google Agenda'],
@@ -1842,7 +1843,7 @@ function renderAgenda(){
   $('aBody').innerHTML=h;
   $('aDayBox').hidden=aView==='lista';
   const list=by[selDay]||[];
-  $('dayTitle').textContent=new Date(selDay+'T12:00').toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'})+` · ${list.length} contato(s)`;
+  $('dayHoje').hidden=selDay===t;$('dayTitle').textContent=(selDay===t?'Hoje · ':'')+new Date(selDay+'T12:00').toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'})+` · ${list.length} contato(s)`;
   const msgs=window.PROSP_msgs?window.PROSP_msgs(selDay):[];const lateL=[];
   const G=[['msg','Mensagens para enviar',msgs],['atr','Atrasados',lateL],['vis','Visitas',list.filter(c=>c._p?c._p.tipo==='visita':proxTipo(c)==='visita')],['ret','Retornos de ligação',list.filter(c=>c._p?c._p.tipo==='retorno':proxTipo(c)==='retorno')],['fup','Follow-up de clientes',list.filter(c=>!c._p&&proxTipo(c)==='fup')]];
   if(DGO_DAY!==selDay){DGO={};DGO_DAY=selDay}const GO=DGO;
@@ -1873,6 +1874,9 @@ document.querySelectorAll('[data-av]').forEach(b=>b.addEventListener('click',()=
 const shiftA=n=>{if(aView==='semana'){const d=new Date(selDay+'T12:00');d.setDate(d.getDate()+7*n);selDay=d.toLocaleDateString('sv');calMonth=new Date(d.getFullYear(),d.getMonth(),1)}else{calMonth=new Date(calMonth.getFullYear(),calMonth.getMonth()+n,1)}renderAgenda()};
 $('cPrev').addEventListener('click',()=>shiftA(-1));$('cNext').addEventListener('click',()=>shiftA(1));
 $('cToday').addEventListener('click',()=>{selDay=today();calMonth=new Date();renderAgenda()});
+$('dayHoje').addEventListener('click',()=>{selDay=today();calMonth=new Date();renderAgenda()});
+// ao abrir a Agenda, sempre começa no dia de hoje
+document.addEventListener('click',e=>{if(e.target.closest('[data-go="agenda"]')){selDay=null;calMonth=new Date()}},true);
 $('aAll').addEventListener('change',renderAgenda);
 $('aFilterBtn').addEventListener('click',e=>openFilterPop(e.currentTarget,renderAgenda));
 $('aChips').addEventListener('click',e=>{const b=e.target.closest('[data-unf]');if(!b)return;if(b.dataset.unf==='*')filters={};else{const [id,v]=b.dataset.unf.split('|');filters[id]=(filters[id]||[]).filter(x=>x!==v)}renderAgenda()});
