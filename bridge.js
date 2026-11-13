@@ -3,12 +3,12 @@
 // mas sincroniza só o que mudou desde a última vez (economiza leituras do plano grátis).
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
-import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, doc, getDoc, getDocsFromCache, setDoc, onSnapshot, query, where, serverTimestamp, Timestamp, writeBatch } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
+import { initializeFirestore, persistentLocalCache, persistentSingleTabManager, terminate, clearIndexedDbPersistence, collection, doc, getDoc, getDocsFromCache, setDoc, onSnapshot, query, where, serverTimestamp, Timestamp, writeBatch } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
 import { firebaseConfig } from './firebase-config.js';
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const fs = initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) });
+const fs = initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentSingleTabManager(undefined) }) });
 
 const $g = id => document.getElementById(id);
 const gate = $g('authGate'), msg = $g('agMsg'), btn = $g('agIn');
@@ -37,7 +37,7 @@ function engine(name) {
       onSnapshot(query(c, where('_u', '>', Timestamp.fromMillis(maxU))), s => {
         s.docChanges().forEach(ch => { if (ch.type !== 'removed') e.map.set(ch.doc.id, ch.doc.data()); });
         if (first) { first = false; res(); } emit();
-      }, err => { console.error(name, err); e.errs.forEach(f => f(err)); if (first) { first = false; res(); } });
+      }, err => { console.error(name, err); e.err = err; e.errs.forEach(f => f(err)); if (first) { first = false; res(); } });
     });
   })();
   return e;
@@ -85,12 +85,23 @@ async function importBackup(file) {
   setTimeout(() => { location.href = location.pathname; }, 900);
 }
 
+// ---------- quando não carrega ----------
+function problem(err) {
+  const c = err && err.code;
+  say(c === 'failed-precondition' ? 'O CRM já está aberto em outra aba ou janela. Feche as outras e toque em Tentar de novo.'
+    : c === 'permission-denied' ? 'Sem permissão no banco: confira se entrou com o e-mail liberado nas regras do Firestore.'
+    : 'Não consegui carregar seus dados' + (c ? ' (' + c + ')' : ' (demorou demais)') + '. Toque em Tentar de novo.');
+  btn.hidden = false; btn.textContent = 'Tentar de novo';
+  btn.onclick = async () => { say('Limpando o cache do aparelho…'); try { await terminate(fs); await clearIndexedDbPersistence(fs); } catch (x) { console.error(x); } location.href = location.pathname; };
+}
 // ---------- login ----------
 let started = false;
 async function start(user) {
   if (started) return; started = true;
   say('Carregando seus dados…'); btn.hidden = true;
-  const cli = engine('clientes'); await cli.ready;
+  const cli = engine('clientes');
+  const ok = await Promise.race([cli.ready.then(() => true), new Promise(r => setTimeout(() => r(false), 15000))]);
+  if (!ok || cli.err) { problem(cli.err); return; }
   if (!cli.map.size || /[?&]importar/.test(location.search)) {
     // banco vazio: oferece importar o backup
     say(cli.map.size ? `Importar backup: os registros do arquivo substituem os que têm o mesmo código. Escolha o crm-backup.json.` : `Olá, ${user.displayName || user.email}. Seu banco ainda está vazio. Escolha o arquivo de backup (crm-backup.json) para trazer seus clientes e leads.`);
