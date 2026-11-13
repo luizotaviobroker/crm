@@ -3,12 +3,18 @@
 // mas sincroniza só o que mudou desde a última vez (economiza leituras do plano grátis).
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
-import { initializeFirestore, persistentLocalCache, persistentSingleTabManager, terminate, clearIndexedDbPersistence, collection, doc, getDoc, getDocsFromCache, setDoc, onSnapshot, query, where, serverTimestamp, Timestamp, writeBatch } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
+import { initializeFirestore, memoryLocalCache, collection, doc, getDoc, setDoc, onSnapshot, query, where, serverTimestamp, Timestamp, writeBatch } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
 import { firebaseConfig } from './firebase-config.js';
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const fs = initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentSingleTabManager(undefined) }) });
+const fs = initializeFirestore(app, { localCache: memoryLocalCache() });
+
+// cópia dos dados guardada no próprio aparelho (IndexedDB), para abrir rápido e ler do servidor só o que mudou
+const IDB = new Promise(res => { try { const r = indexedDB.open('crm-cache', 1); r.onupgradeneeded = () => r.result.createObjectStore('c'); r.onsuccess = () => res(r.result); r.onerror = () => res(null); } catch (x) { res(null); } });
+const idbGet = async k => { const d = await IDB; if (!d) return null; return new Promise(res => { try { const q = d.transaction('c').objectStore('c').get(k); q.onsuccess = () => res(q.result || null); q.onerror = () => res(null); } catch (x) { res(null); } }); };
+const idbPut = async (k, v) => { const d = await IDB; if (!d) return; try { d.transaction('c', 'readwrite').objectStore('c').put(v, k); } catch (x) { console.error(x); } };
+const idbClear = async () => { const d = await IDB; if (!d) return; await new Promise(res => { try { const t = d.transaction('c', 'readwrite'); t.objectStore('c').clear(); t.oncomplete = res; t.onerror = res; } catch (x) { res(); } }); };
 
 const $g = id => document.getElementById(id);
 const gate = $g('authGate'), msg = $g('agMsg'), btn = $g('agIn');
@@ -18,26 +24,32 @@ const say = t => { if (msg) msg.textContent = t; };
 // o Firestore não aceita lista dentro de lista: esses documentos vão guardados como texto (_j)
 const hasNested = (v, inArr) => Array.isArray(v) ? (inArr || v.some(x => hasNested(x, true))) : (v && typeof v === 'object') ? Object.values(v).some(x => hasNested(x, false)) : false;
 const enc = v => hasNested(v, false) ? { _j: JSON.stringify(v) } : v;
-const clean = v => { if (!v) return v; if (typeof v._j === 'string') { try { return JSON.parse(v._j); } catch (x) { return null; } } const o = Object.assign({}, v); delete o._u; delete o._del; return o; };
-const ms = t => (t && typeof t.toMillis === 'function') ? t.toMillis() : 0;
+const clean = v => { if (!v) return v; if (typeof v._j === 'string') { try { return JSON.parse(v._j); } catch (x) { return null; } } const o = Object.assign({}, v); delete o._u; delete o._del; delete o._pend; return o; };
+const ms = t => typeof t === 'number' ? t : (t && typeof t.toMillis === 'function') ? t.toMillis() : 0;
+const plain = v => { const o = Object.assign({}, v); o._u = ms(v._u); return o; };
 
-// um "motor" por coleção: começa pelo que já está guardado no aparelho e escuta só as mudanças
+// um "motor" por coleção: começa pela cópia do aparelho e escuta do servidor só o que mudou
 const ENG = {};
 function engine(name) {
   if (ENG[name]) return ENG[name];
-  const e = { map: new Map(), subs: new Set(), errs: new Set(), t: null };
+  const e = { map: new Map(), subs: new Set(), errs: new Set(), t: null, st: null };
   const emit = () => { clearTimeout(e.t); e.t = setTimeout(() => { const s = snap(e); e.subs.forEach(f => { try { f(s); } catch (x) { console.error(x); } }); }, 0); };
-  e.emit = emit;
+  const store = () => { clearTimeout(e.st); e.st = setTimeout(() => { const o = {}; let mx = 0; for (const [id, v] of e.map) { o[id] = v; if (!v._pend) mx = Math.max(mx, v._u || 0); } idbPut(name, { docs: o, maxU: mx }); }, 800); };
+  e.emit = () => { emit(); store(); };
   e.ready = (async () => {
     const c = collection(fs, name);
+    const cached = await idbGet(name);
     let maxU = 0;
-    try { const cs = await getDocsFromCache(c); cs.forEach(d => { const v = d.data(); e.map.set(d.id, v); maxU = Math.max(maxU, ms(v._u)); }); } catch (x) { /* sem cache ainda */ }
+    if (cached && cached.docs) { for (const [id, v] of Object.entries(cached.docs)) e.map.set(id, v); maxU = cached.maxU || 0; }
     await new Promise(res => {
-      let first = true;
+      let first = true; const done = () => { if (first) { first = false; res(); } };
+      // sem internet ou servidor lento: abre com a cópia do aparelho e continua tentando
+      if (e.map.size) setTimeout(done, 4000);
       onSnapshot(query(c, where('_u', '>', Timestamp.fromMillis(maxU))), s => {
-        s.docChanges().forEach(ch => { if (ch.type !== 'removed') e.map.set(ch.doc.id, ch.doc.data()); });
-        if (first) { first = false; res(); } emit();
-      }, err => { console.error(name, err); e.err = err; e.errs.forEach(f => f(err)); if (first) { first = false; res(); } });
+        let ch = 0;
+        s.docChanges().forEach(x => { if (x.type === 'removed') return; const v = x.doc.data(); if (!v._u) return; e.map.set(x.doc.id, plain(v)); ch++; });
+        done(); if (ch) e.emit(); else emit();
+      }, err => { console.error(name, err); e.err = err; e.errs.forEach(f => f(err)); done(); });
     });
   })();
   return e;
@@ -48,7 +60,7 @@ function snap(e) {
   return { docs, size: docs.length, empty: !docs.length, forEach: f => docs.forEach(f) };
 }
 // gravação otimista: a tela já recebe a versão nova, sem esperar o servidor confirmar
-function local(path, v) { const parts = path.split('/'); if (parts.length !== 2) return; const e = ENG[parts[0]]; if (!e) return; e.map.set(parts[1], Object.assign({}, v, { _u: Timestamp.now() })); e.emit(); }
+function local(path, v) { const parts = path.split('/'); if (parts.length !== 2) return; const e = ENG[parts[0]]; if (!e) return; e.map.set(parts[1], Object.assign({}, v, { _u: Date.now(), _pend: 1 })); e.emit(); }
 function ref(path) {
   const r = doc(fs, path);
   return {
@@ -81,6 +93,7 @@ async function importBackup(file) {
     for (const [c, id, v] of items.slice(i, i + 400)) b.set(doc(fs, c, id), Object.assign({}, enc(v), { _u: serverTimestamp() }));
     await b.commit(); n += Math.min(400, items.length - i); say(`Importando… ${n} de ${items.length}`);
   }
+  await idbClear();
   say(`Pronto: ${items.length} registros importados. Abrindo o CRM…`);
   setTimeout(() => { location.href = location.pathname; }, 900);
 }
@@ -90,9 +103,9 @@ function problem(err) {
   const c = err && err.code;
   say(c === 'failed-precondition' ? 'O CRM já está aberto em outra aba ou janela. Feche as outras e toque em Tentar de novo.'
     : c === 'permission-denied' ? 'Sem permissão no banco: confira se entrou com o e-mail liberado nas regras do Firestore.'
-    : 'Não consegui carregar seus dados' + (c ? ' (' + c + ')' : ' (demorou demais)') + '. Toque em Tentar de novo.');
+    : 'Não consegui carregar seus dados' + (c ? ' (' + c + ': ' + (err.message || '') + ')' : ' (o servidor não respondeu — confira a internet)') + '. Toque em Tentar de novo.');
   btn.hidden = false; btn.textContent = 'Tentar de novo';
-  btn.onclick = async () => { say('Limpando o cache do aparelho…'); try { await terminate(fs); await clearIndexedDbPersistence(fs); } catch (x) { console.error(x); } location.href = location.pathname; };
+  btn.onclick = async () => { say('Limpando a cópia do aparelho…'); await idbClear(); location.href = location.pathname; };
 }
 // ---------- login ----------
 let started = false;
@@ -100,7 +113,7 @@ async function start(user) {
   if (started) return; started = true;
   say('Carregando seus dados…'); btn.hidden = true;
   const cli = engine('clientes');
-  const ok = await Promise.race([cli.ready.then(() => true), new Promise(r => setTimeout(() => r(false), 15000))]);
+  const ok = await Promise.race([cli.ready.then(() => true), new Promise(r => setTimeout(() => r(false), 25000))]);
   if (!ok || cli.err) { problem(cli.err); return; }
   if (!cli.map.size || /[?&]importar/.test(location.search)) {
     // banco vazio: oferece importar o backup
