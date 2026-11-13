@@ -1367,6 +1367,7 @@ function actCard(c){
   const t=today();const late=c.proximo&&c.proximo<t;
   return `<div class="act" data-id="${c.id}"><div class="top"><span class="nm" data-open="${c.id}">${esc(c.nome)}</span>${c.proximo?`<span class="${late?'late':'hint'}">${late?'Atrasado · ':''}${{visita:'Visita',retorno:'Retorno',fup:'Follow-up'}[proxTipo(c)]} · ${fmtD(c.proximo)}${c.proxH?' '+c.proxH:''}</span>`:''}</div>
    <div class="row">${pill(colById('etapa'),c.etapa)}${c.emp&&c.emp.length?c.emp.map(e=>`<span class="tagx">${esc(e)}</span>`).join(''):''}${c.empresa?`<span class="hint">${esc(c.empresa)}</span>`:''}</div>
+   ${(()=>{const o=c.cnpj&&window.PROSP_getObs?window.PROSP_getObs(c.cnpj):'';return o?`<div class="pobs"><b>Obs.:</b> <span class="pobst">${esc(o)}</span> <button type="button" class="lnk pobsed" data-pobsed="${esc(c.cnpj)}">Editar</button></div>`:''})()}
    ${c.cel?`<div class="row"><span class="mono">${fmtTel(c.cel)}</span><button class="btn sm" type="button" data-copy="${dial(c.cel)}">Copiar</button><a class="btn sm ghost" href="https://wa.me/55${c.cel}" target="_blank" rel="noopener">WhatsApp</a></div>`:''}
    <div class="row"><button class="btn sm primary" type="button" data-open="${c.id}">Ver ficha e histórico</button>${(c.updates||[])[0]?`<span class="hint">Último: ${esc((c.updates[0].txt||'').slice(0,60))}</span>`:''}</div>
 ${cicRow('c',c.id,c.cic||'')}${remBox('c',c.id,c.proximo,c.proxH,c.etapa==='Agendou')}</div>`;
@@ -1504,8 +1505,9 @@ $('grid').addEventListener('click',e=>{const t=e.target.closest('[data-tgrp]');i
 const _sv=p=>`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px">${p}</svg>`;
 const SVG_UD=_sv('<path d="M8 4v16M4 8l4-4 4 4M16 20V4M12 16l4 4 4-4"/>'),SVG_UP=_sv('<path d="M12 20V4M6 10l6-6 6 6"/>'),SVG_DN=_sv('<path d="M12 4v16M6 14l6 6 6-6"/>');
 // versões do sistema
-const APP_VER='4.1';
+const APP_VER='4.2';
 const VERSOES=[
+ ['4.2','13/11/2026','Agenda: a observação da prospecção (amarela) aparece também nas visitas que já foram para o CRM'],
  ['4.1','13/11/2026','Visitas vão sozinhas para a agenda CRM Ginco no Google Agenda'],
  ['4.0','13/11/2026','App próprio (Firebase): funciona no iPad, iPhone e PC ao mesmo tempo, com login Google e dados sincronizados'],
  ['3.28','13/11/2026','Ligar disca 0 + DDD + número'],
@@ -1999,7 +2001,7 @@ window.CRM_autoFromProspect=o=>{try{const now=new Date().toISOString();let c=Obj
   const txt='Prospecção: agendou visita'+(o.visita?' para '+fmtD(o.visita)+(o.visitaH?' às '+o.visitaH:''):'')+(o.cic?' · ligação com CIC '+o.cic:'')+(o.obs?' · '+o.obs:'');
   if(c){if(o.cic&&!c.cic)c.cic=o.cic;c.updates=[{t:now,tipo:'ligacao',txt}].concat(c.updates||[]);if(o.visita){c.proximo=o.visita;c.proxH=o.visitaH||''}
     if(!c.etapa||c.etapa==='Demandas'){c.log=(c.log||[]).concat([{t:now,etapa:'Agendou'}]);c.etapa='Agendou'}save(c);renderAll();toast('Visita registrada no CRM · '+c.nome);return}
-  const obs=[o.atividade,o.bairro?'Bairro: '+o.bairro:'',o.capital?'Capital social: '+brl(o.capital):''].filter(Boolean).join('\n');
+  const obs=[o.obs,o.atividade,o.bairro?'Bairro: '+o.bairro:'',o.capital?'Capital social: '+brl(o.capital):''].filter(Boolean).join('\n');
   c={id:'p'+o.cnpj,cnpj:o.cnpj,nome:o.nome||o.empresa||'Sem nome',cel:o.cel||'',empresa:o.empresa||'',etapa:'Agendou',proximo:o.visita||'',proxH:o.visitaH||'',perfil:'',prioridade:'',emp:[],
     origem:'Prospecção',cic:o.cic||'',tags:[],obs,custom:{},valor:'',previsao:'',updates:[{t:now,tipo:'ligacao',txt}],log:[{t:now,etapa:'Agendou'}],criado:now,upd:now,
     fonte:o.fonte&&o.fonte!=='Receita Federal'?'Lista '+o.fonte:'Prospecção (Receita Federal)'};
