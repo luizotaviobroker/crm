@@ -3,7 +3,7 @@
 window.__dbReady=new Promise(r=>window.__setDb=r);
 window.claude={use:async n=>{if(n==='db')return window.__dbReady;if(n==='downloads')return{save:async({filename,data})=>{const u=URL.createObjectURL(data instanceof Blob?data:new Blob([data]));const a=document.createElement('a');a.href=u;a.download=filename||'arquivo';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(u);a.remove()},4000)}};return null}};
 // no app: botão Ligar ao lado de cada WhatsApp (abre o discador do aparelho)
-(function(){const add=root=>{if(!root.querySelectorAll)return;root.querySelectorAll('a[href^="https://wa.me/55"]').forEach(w=>{if(w.dataset.tl)return;w.dataset.tl='1';const n=(w.getAttribute('href').match(/wa\.me\/55(\d{10,11})/)||[])[1];if(!n)return;const t=document.createElement('a');t.href='tel:+55'+n;t.className=(w.className||'')+' tellink';t.textContent='Ligar';t.setAttribute('aria-label','Ligar para '+n);w.parentNode.insertBefore(t,w)})};
+(function(){const add=root=>{if(!root.querySelectorAll)return;root.querySelectorAll('a[href^="https://wa.me/55"]').forEach(w=>{if(w.dataset.tl)return;w.dataset.tl='1';const n=(w.getAttribute('href').match(/wa\.me\/55(\d{10,11})/)||[])[1];if(!n)return;const t=document.createElement('a');t.href='tel:0'+n;t.className=(w.className||'')+' tellink';t.textContent='Ligar';t.setAttribute('aria-label','Ligar para '+n);w.parentNode.insertBefore(t,w)})};
 new MutationObserver(ms=>{for(const m of ms)m.addedNodes.forEach(n=>{if(n.nodeType===1)add(n)})}).observe(document.documentElement,{childList:true,subtree:true});document.addEventListener('DOMContentLoaded',()=>add(document))})();
 </script>
 <style>
