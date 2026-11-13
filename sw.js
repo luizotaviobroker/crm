@@ -1,5 +1,5 @@
 // guarda o app e a base de empresas no aparelho; o banco (Firebase) não passa por aqui
-const SHELL='crm-shell-v4', DATA='crm-mtb-v1';
+const SHELL='crm-shell-v5', DATA='crm-mtb-v1';
 const FILES=['./','index.html','bridge.js','firebase-config.js','manifest.webmanifest','icon-192.png','icon-512.png','icon-180.png'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(SHELL).then(c=>c.addAll(FILES)).then(()=>self.skipWaiting()))});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==SHELL&&k!==DATA).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});
