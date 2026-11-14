@@ -1395,8 +1395,8 @@ document.addEventListener('toggle',e=>{const d=e.target;if(!(d instanceof HTMLDe
   if(d.id==='atrDet'){ATR_OPEN=d.open;const l=$('atrList');if(d.open&&l&&!l.childElementCount)l.innerHTML=ATR_LIST.map(actCard).join('');return}
   if(d.open&&d.dataset.lz){const [k,id,dd,h,vis]=JSON.parse(d.dataset.lz);delete d.dataset.lz;const tmp=document.createElement('div');tmp.innerHTML=remBox(k,id,dd,h,!!vis,true);const body=tmp.querySelector('.remb');if(body)d.appendChild(body)}},true);
 // quadro de remarcar / editar (agenda e início)
-function remBox(k,id,d,h,vis,open){const r=k==='r';if(!open)return `<details class="rem" data-lz="${esc(JSON.stringify([k,id,d||'',h||'',vis?1:0]))}"><summary>✎ ${r?'Mudar data ou virar visita':vis?'Remarcar ou cancelar visita':'Editar data'}</summary></details>`;return `<details class="rem" open><summary>✎ ${r?'Mudar data ou virar visita':vis?'Remarcar ou cancelar visita':'Editar data'}</summary><div class="remb" data-rk="${k}" data-rid="${esc(id)}">
-  ${r?`<div class="nxt" role="radiogroup" aria-label="Tipo"><label><input type="radio" name="rt_${esc(id)}" value="retorno" checked> Retorno (ligar)</label><label><input type="radio" name="rt_${esc(id)}" value="visita"> Virou visita</label></div>`:''}
+function remBox(k,id,d,h,vis,open){const r=k==='r';if(!open)return `<details class="rem" data-lz="${esc(JSON.stringify([k,id,d||'',h||'',vis?1:0]))}"><summary>✎ ${r?'Mudar data ou virar visita':vis?'Remarcar, mudar para retorno ou cancelar':'Editar data ou tipo'}</summary></details>`;return `<details class="rem" open><summary>✎ ${r?'Mudar data ou virar visita':vis?'Remarcar, mudar para retorno ou cancelar':'Editar data ou tipo'}</summary><div class="remb" data-rk="${k}" data-rid="${esc(id)}">
+  ${r?`<div class="nxt" role="radiogroup" aria-label="Tipo"><label><input type="radio" name="rt_${esc(id)}" value="retorno" checked> Retorno (ligar)</label><label><input type="radio" name="rt_${esc(id)}" value="visita"> Virou visita</label></div>`:(()=>{const cc=k==='c'?CLI[id]:null,tp=cc?(cc.proxTipo||(cc.etapa==='Agendou'?'visita':'fup')):'visita';return `<div class="nxt" role="radiogroup" aria-label="Tipo">${[['visita','Visita'],['retorno','Retorno (ligar)'],['fup','Follow-up']].map(([v,l])=>`<label><input type="radio" name="rt_${esc(k+id)}" value="${v}"${v===tp?' checked':''}> ${l}</label>`).join('')}</div>`})()}
   <div class="row"><input type="date" data-rd value="${esc(d||'')}" aria-label="Nova data"><input type="time" data-rh value="${esc(h||(r?'':''))}" aria-label="Horário"></div>
   ${r?'':'<input type="text" data-rm placeholder="Motivo (opcional). Ex.: cliente pediu para remarcar" maxlength="300">'}
   <div class="row"><button class="btn sm primary" type="button" data-remsave>Salvar nova data</button>${r?`<button class="btn sm ghost" type="button" data-remcancel>Tirar da agenda</button>`:vis?`<button class="btn sm ghost" type="button" data-remcancel>Cancelar visita</button>`:''}</div></div></details>`}
@@ -1413,9 +1413,12 @@ document.addEventListener('click',e=>{const sv=e.target.closest('[data-remsave]'
   let c=k==='c'?CLI[id]:null,ev=null;
   if(k==='p'){ev=(window.PROSP_events?window.PROSP_events():[]).find(x=>x.tipo==='visita'&&x.cnpj===id);c=window.CRM_find?window.CRM_find(id,ev?ev.tels:[]):null}
   const leads=c?linkedLeads(c):[];if(k==='p'&&!leads.some(x=>x.cnpj===id))leads.push({cnpj:id});
-  leads.forEach(x=>window.PROSP_setVisit&&window.PROSP_setVisit(x.cnpj,d,h));
-  if(c){const old=fdh(c.proximo,c.proxH);c.proximo=d;c.proxH=d?h:'';
-    c.updates=[{t:new Date().toISOString(),tipo:'comentario',txt:(cc?'Visita cancelada ('+old+').':(c.etapa==='Agendou'?'Visita remarcada':'Data alterada')+' de '+old+' para '+fdh(d,h)+'.')+(m?' Motivo: '+m:'')}].concat(c.updates||[]);save(c)}
+  const tp=cc?'':((bx.querySelector('input[type=radio]:checked')||{}).value||'');const TPN={visita:'visita',retorno:'retorno',fup:'follow-up'};
+  if(tp&&tp!=='visita'){leads.forEach(x=>window.PROSP_setVisit&&window.PROSP_setVisit(x.cnpj,'',''));if(!c&&k==='p'){if(window.PROSP_setRetorno)window.PROSP_setRetorno(id,d,h);renderAll();toast('Virou retorno em '+fdh(d,h));return}}
+  else leads.forEach(x=>window.PROSP_setVisit&&window.PROSP_setVisit(x.cnpj,d,h));
+  if(c){const old=fdh(c.proximo,c.proxH),oldT=c.proxTipo||(c.etapa==='Agendou'?'visita':'fup');c.proximo=d;c.proxH=d?h:'';if(tp)c.proxTipo=tp;
+    const txt=cc?(oldT==='visita'?'Visita cancelada':'Atividade tirada da agenda')+' ('+old+').':(tp&&tp!==oldT?'Mudou de '+TPN[oldT]+' ('+old+') para '+TPN[tp]+' em '+fdh(d,h)+'.':(oldT==='visita'?'Visita remarcada':'Data alterada')+' de '+old+' para '+fdh(d,h)+'.');
+    c.updates=[{t:new Date().toISOString(),tipo:'comentario',txt:txt+(m?' Motivo: '+m:'')}].concat(c.updates||[]);save(c)}
   renderAll()});
 $('funnel').addEventListener('click',e=>{const b=e.target.closest('[data-fetapa]');if(!b)return;filters={etapa:[b.dataset.fetapa]};go('trabalho')});
 $('mPrev').addEventListener('click',()=>{month=new Date(month.getFullYear(),month.getMonth()-1,1);renderInicio()});
@@ -1505,8 +1508,9 @@ $('grid').addEventListener('click',e=>{const t=e.target.closest('[data-tgrp]');i
 const _sv=p=>`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px">${p}</svg>`;
 const SVG_UD=_sv('<path d="M8 4v16M4 8l4-4 4 4M16 20V4M12 16l4 4 4-4"/>'),SVG_UP=_sv('<path d="M12 20V4M6 10l6-6 6 6"/>'),SVG_DN=_sv('<path d="M12 4v16M6 14l6 6 6-6"/>');
 // versões do sistema
-const APP_VER='4.12';
+const APP_VER='4.13';
 const VERSOES=[
+ ['4.13','14/11/2026','Remarcar visita: escolher se vira Visita, Retorno ou Follow-up'],
  ['4.12','14/11/2026','Ficha: nome, Copiar e Fechar ficam presos no topo ao rolar'],
  ['4.11','14/11/2026','Agenda mostra todos os telefones do contato (não só o primeiro)'],
  ['4.10','14/11/2026','Topo da tela sem o efeito esmaecido no iPhone e no iPad'],
@@ -2746,7 +2750,7 @@ function renderFunil(){
   <div class="fdays">${days.map(([x,D])=>`<div title="${D.lig} ligadas · ${D.fal} faladas" class="fd${D.lig>=META_LIG&&D.fal>=META_FAL?' ok':''}${x.toLocaleDateString('sv')===t?' hoje':''}"><span>${x.toLocaleDateString('pt-BR',{weekday:'short'}).replace('.','')} ${x.getDate()}</span><b>${D.lig}</b><small>${D.fal} fal.</small></div>`).join('')}</div></div></details>`;
 }
 $('funil').addEventListener('toggle',e=>{if(!e.target.classList.contains('fwrap'))return;FUN_OPEN=e.target.open;store.set('pvg_funil',FUN_OPEN)},true);
-function retPend(L){if(!L.retorno)return false;if(inList(L)&&L.status==='retornar')return true;const l=L.hist[L.hist.length-1];return !l||l.s==='retornar'}
+function retPend(L){if(!L.retorno)return false;if(inList(L)&&L.status==='retornar')return true;const l=(L.hist||[])[(L.hist||[]).length-1];if(L.retT&&(!l||+new Date(l.t)<=+new Date(L.retT)))return true;return !l||l.s==='retornar'}
 let calM=null;
 function renderCal(){
   const t=today(),sel=agDay||t;if(!calM)calM=sel.slice(0,7);
@@ -2962,7 +2966,7 @@ window.PROSP_events=()=>{const out=[];try{for(const L of Object.values(LEADS)){i
     if(L.retorno&&retPend(L))out.push(Object.assign({tipo:'retorno',d:L.retorno,h:L.retornoH||''},base))}}catch(e){console.error(e)}return out};
 window.PROSP_day=k=>{agDay=k===today()?null:k;calM=(k||today()).slice(0,7);renderHoje()};
 window.PROSP_setCic=(id,v)=>{const L=LEADS[id];if(!L)return false;const N=Object.assign({},L,{cicLast:v||'',upd:new Date().toISOString()});LEADS[id]=N;put(N);return true};
-window.PROSP_setRetorno=(id,d,h)=>{const L=LEADS[id];if(!L)return false;const N=Object.assign({},L,{retorno:d||'',retornoH:d?(h||''):'',upd:new Date().toISOString()});LEADS[id]=N;put(N);try{renderLeads();renderHoje()}catch(e){}return true};
+window.PROSP_setRetorno=(id,d,h)=>{const L=LEADS[id];if(!L)return false;const N=Object.assign({},L,{retorno:d||'',retornoH:d?(h||''):'',retT:d?new Date().toISOString():'',upd:new Date().toISOString()});LEADS[id]=N;put(N);try{renderLeads();renderHoje()}catch(e){}return true};
 window.PROSP_setVisit=(id,d,h)=>{const L=LEADS[id];if(!L)return false;const N=Object.assign({},L,{visita:d||'',visitaH:d?(h||''):'',upd:new Date().toISOString()});LEADS[id]=N;put(N);try{renderLeads();renderHoje()}catch(e){}return true};
 window.PROSP_toList=id=>{const L=LEADS[id];if(!L)return false;const N=Object.assign({},L,{inList:true,status:'novo',statusT:'',upd:new Date().toISOString()});LEADS[id]=N;put(N);renderLeads();render();return true};
 window.__prospInit=()=>{if(window.__prospStarted)return;window.__prospStarted=true;initDb()};window.__prospLoad=()=>{window.__prospInit();if(window.__prospLoaded)return;window.__prospLoaded=true;load()};
