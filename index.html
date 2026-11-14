@@ -1369,7 +1369,7 @@ function actCard(c){
   return `<div class="act" data-id="${c.id}"><div class="top"><span class="nm" data-open="${c.id}">${esc(c.nome)}</span>${c.proximo?`<span class="${late?'late':'hint'}">${late?'Atrasado · ':''}${{visita:'Visita',retorno:'Retorno',fup:'Follow-up'}[proxTipo(c)]} · ${fmtD(c.proximo)}${c.proxH?' '+c.proxH:''}</span>`:''}</div>
    <div class="row">${pill(colById('etapa'),c.etapa)}${c.emp&&c.emp.length?c.emp.map(e=>`<span class="tagx">${esc(e)}</span>`).join(''):''}${c.empresa?`<span class="hint">${esc(c.empresa)}</span>`:''}</div>
    ${(()=>{const o=c.cnpj&&window.PROSP_getObs?window.PROSP_getObs(c.cnpj):'';return o?`<div class="pobs"><b>Obs.:</b> <span class="pobst">${esc(o)}</span> <button type="button" class="lnk pobsed" data-pobsed="${esc(c.cnpj)}">Editar</button></div>`:''})()}
-   ${c.cel?`<div class="row"><span class="mono">${fmtTel(c.cel)}</span><button class="btn sm" type="button" data-copy="${dial(c.cel)}">Copiar</button><a class="btn sm ghost" href="https://wa.me/55${c.cel}" target="_blank" rel="noopener">WhatsApp</a></div>`:''}
+   ${telRows([c.cel].concat(c.cnpj&&window.PROSP_tels?window.PROSP_tels(c.cnpj):[]))}
    <div class="row"><button class="btn sm primary" type="button" data-open="${c.id}">Ver ficha e histórico</button>${(c.updates||[])[0]?`<span class="hint">Último: ${esc((c.updates[0].txt||'').slice(0,60))}</span>`:''}</div>
 ${cicRow('c',c.id,c.cic||'')}${remBox('c',c.id,c.proximo,c.proxH,c.etapa==='Agendou')}</div>`;
 }
@@ -1506,8 +1506,9 @@ $('grid').addEventListener('click',e=>{const t=e.target.closest('[data-tgrp]');i
 const _sv=p=>`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px">${p}</svg>`;
 const SVG_UD=_sv('<path d="M8 4v16M4 8l4-4 4 4M16 20V4M12 16l4 4 4-4"/>'),SVG_UP=_sv('<path d="M12 20V4M6 10l6-6 6 6"/>'),SVG_DN=_sv('<path d="M12 4v16M6 14l6 6 6-6"/>');
 // versões do sistema
-const APP_VER='4.10';
+const APP_VER='4.11';
 const VERSOES=[
+ ['4.11','14/11/2026','Agenda mostra todos os telefones do contato (não só o primeiro)'],
  ['4.10','14/11/2026','Topo da tela sem o efeito esmaecido no iPhone e no iPad'],
  ['4.9','14/11/2026','Cliente com CIC “Mariana, Estefany” passa para Estefany'],
  ['4.8','14/11/2026','CICs em ordem alfabética; novo CIC João Gabriel Oshiro'],
@@ -1808,7 +1809,8 @@ let PEV={};
 function pCard(c){const e=c._p,late=e.d<today();
   return `<div class="act pact"><div class="top"><button type="button" class="nm nmb" data-ptog>${esc(e.nome)}</button><span class="${late&&e.tipo==='retorno'?'late':'hint'}">${e.tipo==='visita'?'Visita'+(e.h?' · '+e.h:''):'Retorno'+(late?' atrasado':'')} · Prospecção</span></div>
    ${e.empresa?`<div class="hint">${esc(e.empresa)}</div>`:''}<div class="pobs"${e.obs?'':' style="background:none;border:0;padding:0"'}>${e.obs?`<b>Obs.:</b> <span class="pobst">${esc(e.obs)}</span> `:''}<button type="button" class="lnk pobsed" data-pobsed="${esc(e.cnpj)}">${e.obs?'Editar':'+ Observação'}</button></div>
-   <div class="row">${e.cel?`<span class="mono">${fmtTel(e.cel)}</span><button class="btn sm" type="button" data-copy="${dial(e.cel)}">Copiar</button><a class="btn sm ghost" href="https://wa.me/55${e.cel}" target="_blank" rel="noopener">WhatsApp</a>`:''}<button class="btn sm" type="button" data-plig="${e.cnpj}">Pôr na lista para ligar</button>${pCrmBtn(e)}</div>${(()=>{const cl=window.CRM_find?window.CRM_find(e.cnpj,e.tels):null;return cicRow('p',e.cnpj,(cl&&cl.cic)||e.cic||'')})()}${e.tipo==='visita'?remBox('p',e.cnpj,e.d,e.h,true,c._open):remBox('r',e.cnpj,e.d,e.h||'',false,c._open)}</div>`}
+   ${telRows((e.tels&&e.tels.length?e.tels:[]).concat(e.cel?[e.cel]:[]))}<div class="row"><button class="btn sm" type="button" data-plig="${e.cnpj}">Pôr na lista para ligar</button>${pCrmBtn(e)}</div>${(()=>{const cl=window.CRM_find?window.CRM_find(e.cnpj,e.tels):null;return cicRow('p',e.cnpj,(cl&&cl.cic)||e.cic||'')})()}${e.tipo==='visita'?remBox('p',e.cnpj,e.d,e.h,true,c._open):remBox('r',e.cnpj,e.d,e.h||'',false,c._open)}</div>`}
+function telRows(list){const seen=new Set();return list.map(t=>String(t||'').replace(/\D/g,'').replace(/^55(?=\d{10,11}$)/,'')).filter(t=>t&&!seen.has(t)&&seen.add(t)).map(t=>`<div class="row"><span class="mono">${fmtTel(t)}</span><button class="btn sm" type="button" data-copy="${dial(t)}">Copiar</button><a class="btn sm ghost" href="https://wa.me/55${t}" target="_blank" rel="noopener">WhatsApp</a></div>`).join('')}
 function pCrmBtn(e){const c=window.CRM_find?window.CRM_find(e.cnpj,e.tels):null;return c?`<button class="btn sm ghost" type="button" data-crmopen="${esc(c.id)}" title="Abrir a ficha no CRM">✓ No CRM · ${esc(c.etapa||'')}</button>`:`<button class="btn sm primary" type="button" data-tocrm="${esc(e.cnpj)}" title="Criar como cliente no CRM">→ Enviar ao CRM</button>`}
 document.addEventListener('click',e=>{const b=e.target.closest('[data-plig]');if(b){e.preventDefault();if(window.PROSP_toList&&window.PROSP_toList(b.dataset.plig)){toast('Na sua lista de ligações');b.textContent='Na lista ✓';b.disabled=true}return}
   const o=e.target.closest('[data-open^="pp:"]');if(o){e.preventDefault();e.stopPropagation();const ev=PEV[o.dataset.open];if(ev){const m=document.createElement('div');m.className='verpop';m.innerHTML='<div class="vbox"><div class="row" style="justify-content:space-between"><b>'+(ev.tipo==='visita'?'Visita':'Retorno de ligação')+' · '+fdh(ev.d,ev.h)+'</b><button class="btn sm ghost" type="button" data-vclose>Fechar</button></div>'+pCard({_p:ev,_open:true})+'</div>';m.addEventListener('click',x=>{if(x.target===m||x.target.closest('[data-vclose]'))m.remove()});document.body.appendChild(m)}return}
@@ -2952,6 +2954,7 @@ window.PROSP_msgs=d=>{const t=today();const out=[];for(const L of Object.values(
     out.push({id:L.cnpj,nome:L.socio||L.empresa||'',empresa:L.socio&&L.empresa&&norm(L.empresa)!==norm(L.socio)?L.empresa:'',cel,dia:e.dia,ok:!!e.ok,late:!e.ok&&e.dia<t,obs:l&&l.obs||''})}
   return out.sort((a,b)=>(a.ok-b.ok)||a.dia.localeCompare(b.dia))};
 window.PROSP_msgSent=(id,ok)=>{const L=LEADS[id];if(!L||!L.envio)return;const N=Object.assign({},L,{envio:Object.assign({},L.envio,{ok,okT:ok?new Date().toISOString():''}),upd:new Date().toISOString()});LEADS[id]=N;put(N)};
+window.PROSP_tels=id=>{const L=LEADS[id];return L?(L.tels||[]).map(t=>t.t):[]};
 window.PROSP_stats=(a,b)=>{const r={lig:0,nao:0,atendeu:0,retornar:0,agendou:0,sem:0,errado:0,disp:0};try{eachCall((s,k)=>{if(k>=a&&k<=b){r.lig++;if(r[s]!=null)r[s]++}});for(const L of Object.values(LEADS))for(const t of L.disp||[]){const k=dayOf(t);if(k>=a&&k<=b)r.disp++}}catch(e){console.error(e)}r.fal=r.atendeu+r.retornar+r.agendou+r.sem;return r};
 window.PROSP_events=()=>{const out=[];try{for(const L of Object.values(LEADS)){if(!L||!L.cnpj)continue;const r=rowOf(L.cnpj);const nome=(r&&r[27]==='Receita Federal'&&ownerOf(r))||L.socio||L.empresa||'';
     const cel=(L.tels||[]).find(t=>t.cel&&t.s!=='c')||(L.tels||[])[0];const base={cnpj:L.cnpj,nome,empresa:L.empresa||'',cel:cel?cel.t:'',tels:(L.tels||[]).map(t=>t.t),obs:lastObs(L),cic:L.cicLast||''};
