@@ -905,8 +905,8 @@ table.grid tr.tgrp td.c-nome{border-left-width:4px;border-left-style:solid}
       <div class="head methead" id="v-metricas">
         <h1 style="font-size:22px">Métricas</h1>
         <div class="row">
-          <div class="views" role="group" aria-label="Período"><button type="button" data-per="hoje" aria-pressed="false">Hoje</button><button type="button" data-per="semana" aria-pressed="false">Semana</button><button type="button" data-per="mes" aria-pressed="true">Mês</button><button type="button" data-per="custom" aria-pressed="false">Período</button></div>
-          <span class="row" id="mCustom" hidden><input type="date" id="mFrom" style="width:auto"><input type="date" id="mTo" style="width:auto"></span>
+          <div class="views" role="group" aria-label="Período"><button type="button" data-per="hoje" aria-pressed="false">Hoje</button><button type="button" data-per="ontem" aria-pressed="false">Ontem</button><button type="button" data-per="semana" aria-pressed="false">Semana</button><button type="button" data-per="mes" aria-pressed="true">Mês</button><button type="button" data-per="custom" aria-pressed="false">Período</button></div>
+          <span class="row" id="mCustom" hidden><label class="hint">De <input type="date" id="mFrom" style="width:auto"></label><label class="hint">até <input type="date" id="mTo" style="width:auto"></label></span>
           <div class="monthnav" id="mShift"><button class="btn sm" type="button" id="mmPrev" aria-label="Anterior">‹</button><b id="mmLbl"></b><button class="btn sm" type="button" id="mmNext" aria-label="Próximo">›</button></div>
         </div>
       </div>
@@ -1505,8 +1505,9 @@ $('grid').addEventListener('click',e=>{const t=e.target.closest('[data-tgrp]');i
 const _sv=p=>`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px">${p}</svg>`;
 const SVG_UD=_sv('<path d="M8 4v16M4 8l4-4 4 4M16 20V4M12 16l4 4 4-4"/>'),SVG_UP=_sv('<path d="M12 20V4M6 10l6-6 6 6"/>'),SVG_DN=_sv('<path d="M12 4v16M6 14l6 6 6-6"/>');
 // versões do sistema
-const APP_VER='4.4';
+const APP_VER='4.5';
 const VERSOES=[
+ ['4.5','14/11/2026','Métricas: botão Ontem, período De/até e ligações abertas por resultado (atenderam, não atenderam, agendaram, retorno, sem interesse, número errado, disparos)'],
  ['4.4','13/11/2026','Agenda abre sempre no dia de hoje; botão Voltar para hoje quando outro dia está selecionado'],
  ['4.3','13/11/2026','Meta diária: 20 ligações (e 6 faladas)'],
  ['4.2','13/11/2026','Agenda: a observação da prospecção (amarela) aparece também nas visitas que já foram para o CRM'],
@@ -1894,7 +1895,8 @@ function mRange(){
 function hbars(el,rows,color){const mx=Math.max(1,...rows.map(r=>r[1]));$(el).innerHTML=rows.length?rows.map(([l,n,c,txt])=>`<div class="bar" title="${esc(l)}: ${txt||n}"><span class="lab">${esc(l)}</span><span class="trk"><span class="fill" style="display:block;width:${n/mx*100}%;${c||color?`background:${c||color}`:''}"></span></span><span class="v">${txt||n}</span></div>`).join(''):'<div class="hint">Sem dados no período.</div>'}
 function renderMetricas(){
   const {a,b,lbl}=mRange();$('mmLbl').textContent=lbl;$('mShift').hidden=mPer==='custom';$('mCustom').hidden=mPer!=='custom';
-  document.querySelectorAll('[data-per]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.per===mPer));
+  const yd=(()=>{const d=new Date();d.setDate(d.getDate()-1);return d.toLocaleDateString('sv')})(),perNow=mPer==='hoje'&&a===yd?'ontem':mPer;
+  document.querySelectorAll('[data-per]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.per===perNow));
   const all=Object.values(CLI);const dk=iso=>new Date(iso).toLocaleDateString('sv');const inR=iso=>{if(!iso)return false;const k=iso.length===10?iso:dk(iso);return k>=a&&k<=b};
   const ups=[];all.forEach(c=>(c.updates||[]).forEach(u=>{if(inR(u.t))ups.push({c,u})}));
   const ligCRM=ups.filter(x=>x.u.tipo==='ligacao').length, at=ups.filter(x=>x.u.tipo==='atendimento').length;
@@ -1905,7 +1907,10 @@ function renderMetricas(){
   const reach=e=>all.filter(c=>(c.log||[]).some(l=>(Array.isArray(e)?e.includes(l.etapa):l.etapa===e)&&inR(l.t)));
   const ag=reach('Agendou'),vi=reach(['Visitou','Foi na área/maquete']),pr=reach('Proposta'),ga=reach('Ganho'),im=reach('Impedido');
   const vGa=ga.reduce((s,c)=>s+(+c.valor||0),0);
-  $('mAct').innerHTML=[[lig,'Ligações',`${(lig/Math.max(1,uteis)).toFixed(1)} por dia útil · meta 20`],[at,'Atendimentos',`${(at/Math.max(1,uteis)).toFixed(1)} por dia útil`],[pc.length,'Ligações da prospecção',`${pc.filter(x=>['atendeu','agendou','sem'].includes(x.s)).length} faladas · ${(pc.filter(x=>['atendeu','agendou','sem'].includes(x.s)).length/Math.max(1,uteis)).toFixed(1)} por dia útil (meta 6)`],[ligCRM,'Ligações na carteira','registradas nas fichas'],[novos.length,'Clientes novos','entraram no CRM']].map(([v,l,s2])=>`<div class="kpi"><b>${v}</b><span>${l}</span><small>${s2}</small></div>`).join('');
+  const ST=window.PROSP_stats?window.PROSP_stats(a,b):null;
+  const P=ST||{lig:pc.length,fal:pc.filter(x=>['atendeu','retornar','agendou','sem'].includes(x.s)).length,nao:pc.filter(x=>x.s==='nao').length,retornar:pc.filter(x=>x.s==='retornar').length,agendou:pc.filter(x=>x.s==='agendou').length,sem:pc.filter(x=>x.s==='sem').length,errado:pc.filter(x=>x.s==='errado').length,disp:0};
+  const ligT=ligCRM+P.lig,pct=n=>P.lig?' · '+Math.round(n/P.lig*100)+'% das ligações':'',pd=n=>(n/Math.max(1,uteis)).toFixed(1)+' por dia útil';
+  $('mAct').innerHTML=[[ligT,'Ligações',`${pd(ligT)} · meta 20 por dia`],[P.fal,'Atenderam (faladas)',`${pct(P.fal).slice(3)||'—'} · meta 6 por dia`],[P.nao,'Não atenderam',pct(P.nao).slice(3)],[P.agendou,'Agendaram visita',pct(P.agendou).slice(3)],[P.retornar,'Pediram retorno',pct(P.retornar).slice(3)],[P.sem,'Sem interesse',pct(P.sem).slice(3)],[P.errado,'Número errado',pct(P.errado).slice(3)],[P.disp,'Disparos de WhatsApp',''],[at,'Atendimentos',pd(at)],[ligCRM,'Ligações na carteira','registradas nas fichas'],[novos.length,'Clientes novos','entraram no CRM']].map(([v,l,s2])=>`<div class="kpi"><b>${v}</b><span>${l}</span><small>${s2}</small></div>`).join('');
   $('mFun').innerHTML=[[ag.length,'Agendaram'],[vi.length,'Visitaram'],[pr.length,'Propostas'],[ga.length,'Ganhos'],[im.length,'Impedidos']].map(([v,l])=>`<div class="kpi"><b>${v}</b><span>${l}</span></div>`).join('')+`<div class="kpi money"><b>${brl(vGa)}</b><span>Vendido no período</span>${ga.length&&!vGa?'<small>Preencha o Valor dos ganhos</small>':''}</div>`;
   // conversão
   const steps=[['Ligações',lig],['Atendimentos',at],['Agendaram',ag.length],['Visitaram',vi.length],['Propostas',pr.length],['Ganhos',ga.length]];
@@ -1933,7 +1938,7 @@ function renderMetricas(){
   // empreendimento
   const ec={};all.filter(c=>ETAPAS_ATIVAS.includes(c.etapa)).forEach(c=>(c.emp||[]).forEach(e=>ec[e]=(ec[e]||0)+1));hbars('mEmp',Object.entries(ec).sort((x,y)=>y[1]-x[1]).slice(0,12).map(([k,n])=>[k,n]));
 }
-document.querySelectorAll('[data-per]').forEach(b=>b.addEventListener('click',()=>{mPer=b.dataset.per;mRef=new Date();if(mPer==='custom'&&!$('mFrom').value){const d=new Date();d.setDate(1);$('mFrom').value=d.toLocaleDateString('sv');$('mTo').value=today()}renderMetricas()}));
+document.querySelectorAll('[data-per]').forEach(b=>b.addEventListener('click',()=>{mPer=b.dataset.per;mRef=new Date();if(mPer==='ontem'){mPer='hoje';mRef.setDate(mRef.getDate()-1)}if(mPer==='custom'&&!$('mFrom').value){const d=new Date();d.setDate(1);$('mFrom').value=d.toLocaleDateString('sv');$('mTo').value=today()}renderMetricas()}));
 $('mmPrev').addEventListener('click',()=>{if(mPer==='mes')mRef=new Date(mRef.getFullYear(),mRef.getMonth()-1,1);else mRef.setDate(mRef.getDate()-(mPer==='semana'?7:1));renderMetricas()});
 $('mmNext').addEventListener('click',()=>{if(mPer==='mes')mRef=new Date(mRef.getFullYear(),mRef.getMonth()+1,1);else mRef.setDate(mRef.getDate()+(mPer==='semana'?7:1));renderMetricas()});
 ['mFrom','mTo'].forEach(id=>$(id).addEventListener('change',renderMetricas));
@@ -2939,6 +2944,7 @@ window.PROSP_msgs=d=>{const t=today();const out=[];for(const L of Object.values(
     out.push({id:L.cnpj,nome:L.socio||L.empresa||'',empresa:L.socio&&L.empresa&&norm(L.empresa)!==norm(L.socio)?L.empresa:'',cel,dia:e.dia,ok:!!e.ok,late:!e.ok&&e.dia<t,obs:l&&l.obs||''})}
   return out.sort((a,b)=>(a.ok-b.ok)||a.dia.localeCompare(b.dia))};
 window.PROSP_msgSent=(id,ok)=>{const L=LEADS[id];if(!L||!L.envio)return;const N=Object.assign({},L,{envio:Object.assign({},L.envio,{ok,okT:ok?new Date().toISOString():''}),upd:new Date().toISOString()});LEADS[id]=N;put(N)};
+window.PROSP_stats=(a,b)=>{const r={lig:0,nao:0,atendeu:0,retornar:0,agendou:0,sem:0,errado:0,disp:0};try{eachCall((s,k)=>{if(k>=a&&k<=b){r.lig++;if(r[s]!=null)r[s]++}});for(const L of Object.values(LEADS))for(const t of L.disp||[]){const k=dayOf(t);if(k>=a&&k<=b)r.disp++}}catch(e){console.error(e)}r.fal=r.atendeu+r.retornar+r.agendou+r.sem;return r};
 window.PROSP_events=()=>{const out=[];try{for(const L of Object.values(LEADS)){if(!L||!L.cnpj)continue;const r=rowOf(L.cnpj);const nome=(r&&r[27]==='Receita Federal'&&ownerOf(r))||L.socio||L.empresa||'';
     const cel=(L.tels||[]).find(t=>t.cel&&t.s!=='c')||(L.tels||[])[0];const base={cnpj:L.cnpj,nome,empresa:L.empresa||'',cel:cel?cel.t:'',tels:(L.tels||[]).map(t=>t.t),obs:lastObs(L),cic:L.cicLast||''};
     if(L.visita)out.push(Object.assign({tipo:'visita',d:L.visita,h:L.visitaH||''},base));
