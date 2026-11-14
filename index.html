@@ -1505,8 +1505,9 @@ $('grid').addEventListener('click',e=>{const t=e.target.closest('[data-tgrp]');i
 const _sv=p=>`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px">${p}</svg>`;
 const SVG_UD=_sv('<path d="M8 4v16M4 8l4-4 4 4M16 20V4M12 16l4 4 4-4"/>'),SVG_UP=_sv('<path d="M12 20V4M6 10l6-6 6 6"/>'),SVG_DN=_sv('<path d="M12 4v16M6 14l6 6 6-6"/>');
 // versões do sistema
-const APP_VER='4.8';
+const APP_VER='4.9';
 const VERSOES=[
+ ['4.9','14/11/2026','Cliente com CIC “Mariana, Estefany” passa para Estefany'],
  ['4.8','14/11/2026','CICs em ordem alfabética; novo CIC João Gabriel Oshiro'],
  ['4.7','14/11/2026','Sai o “Enviar material hoje” e a lista Mensagens para enviar'],
  ['4.6','14/11/2026','Agenda: tocar em qualquer parte do dia (até no nome) abre o dia, não o cliente'],
@@ -1976,7 +1977,8 @@ async function init(){
   col.onSnapshot(s=>{const m={};for(const d of s.docs){const v=d.data();if(v)m[d.id]=JSON.parse(JSON.stringify(v))}
       // preserva edições locais ainda não confirmadas
       for(const [id,c] of Object.entries(CLI))if(!m[id]&&queue[id])m[id]=c;
-      CLI=m;$('syncState').textContent=`${Object.keys(CLI).length} clientes · sincronizado`;if(!curId)renderAll();if(!$('v-prosp').hidden&&window.__prospRefresh)window.__prospRefresh()},
+      CLI=m;for(const c of Object.values(CLI))if((c.cic||'').trim()==='Mariana, Estefany'){c.cic='Estefany';save(c)}
+      $('syncState').textContent=`${Object.keys(CLI).length} clientes · sincronizado`;if(!curId)renderAll();if(!$('v-prosp').hidden&&window.__prospRefresh)window.__prospRefresh()},
     ()=>{$('syncState').textContent='A sincronização parou. Recarregue.'});
 }
 // ---------- ponte Prospecção → CRM
