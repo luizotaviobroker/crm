@@ -947,8 +947,8 @@ table.grid tr.tgrp td.c-nome{border-left-width:4px;border-left-style:solid}
       </div>
       <div class="mviews">
         <div class="views" role="group" aria-label="Visualização">
-          <button type="button" data-view="tabela" aria-pressed="true"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 10v10"/></svg> Tabela</button>
-          <button type="button" data-view="kanban" aria-pressed="false"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="7" height="16" rx="1.5"/><rect x="14" y="4" width="7" height="10" rx="1.5"/></svg> Kanban</button>
+          <button type="button" data-view="kanban" aria-pressed="true"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="7" height="16" rx="1.5"/><rect x="14" y="4" width="7" height="10" rx="1.5"/></svg> Kanban</button>
+          <button type="button" data-view="tabela" aria-pressed="false"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 10v10"/></svg> Tabela</button>
         </div>
         <span class="hint" id="count"></span>
       </div>
@@ -1243,7 +1243,7 @@ const PEND=['Visitou','Foi na área/maquete','Proposta'];
 let COLS=JSON.parse(JSON.stringify(DEFAULT_COLS)).filter(c=>c.id!=='previsao');
 let PCALLS=[];
 let CLI={}, db=null, col=null, cfgRef=null;
-let view='tabela', filters={}, sortCol=null, sortDir=1, month=new Date(), calMonth=new Date(), selDay=null;
+let view='kanban', filters={}, sortCol=null, sortDir=1, month=new Date(), calMonth=new Date(), selDay=null;
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const norm=s=>(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
@@ -1408,14 +1408,14 @@ document.addEventListener('click',e=>{const sv=e.target.closest('[data-remsave]'
   if(cc&&k!=='r'&&cc.dataset.armed!=='1'){cc.dataset.armed='1';cc.textContent='Toque de novo para cancelar';return}
   {const pm=e.target.closest('.verpop');if(pm&&k!=='r')setTimeout(()=>pm.remove(),0)}
   if(k==='r'){const tp=(bx.querySelector('input[type=radio]:checked')||{}).value;
-    if(sv&&tp==='visita'){if(!h){toast('Coloque o horário da visita');return}if(window.PROSP_setVisit)window.PROSP_setVisit(id,d,h);if(window.PROSP_setRetorno)window.PROSP_setRetorno(id,'')}
+    if(sv&&tp==='visita'){if(!h){toast('Coloque o horário da visita');return}if(window.PROSP_setVisit)window.PROSP_setVisit(id,d,h);if(window.PROSP_setRetorno)window.PROSP_setRetorno(id,'');if(window.PROSP_toCrm)window.PROSP_toCrm(id)}
     else if(window.PROSP_setRetorno)window.PROSP_setRetorno(id,d,h);const pm=e.target.closest('.verpop');if(pm)pm.remove();renderAll();return}
   let c=k==='c'?CLI[id]:null,ev=null;
   if(k==='p'){ev=(window.PROSP_events?window.PROSP_events():[]).find(x=>x.tipo==='visita'&&x.cnpj===id);c=window.CRM_find?window.CRM_find(id,ev?ev.tels:[]):null}
   const leads=c?linkedLeads(c):[];if(k==='p'&&!leads.some(x=>x.cnpj===id))leads.push({cnpj:id});
   const tp=cc?'':((bx.querySelector('input[type=radio]:checked')||{}).value||'');const TPN={visita:'visita',retorno:'retorno',fup:'follow-up'};
   if(tp&&tp!=='visita'){leads.forEach(x=>window.PROSP_setVisit&&window.PROSP_setVisit(x.cnpj,'',''));if(!c&&k==='p'){if(window.PROSP_setRetorno)window.PROSP_setRetorno(id,d,h);renderAll();toast('Virou retorno em '+fdh(d,h));return}}
-  else leads.forEach(x=>window.PROSP_setVisit&&window.PROSP_setVisit(x.cnpj,d,h));
+  else{leads.forEach(x=>window.PROSP_setVisit&&window.PROSP_setVisit(x.cnpj,d,h));if(!c&&k==='p'&&d&&window.PROSP_toCrm){window.PROSP_toCrm(id);renderAll();return}}
   if(c){const old=fdh(c.proximo,c.proxH),oldT=c.proxTipo||(c.etapa==='Agendou'?'visita':'fup');c.proximo=d;c.proxH=d?h:'';if(tp)c.proxTipo=tp;
     const txt=cc?(oldT==='visita'?'Visita cancelada':'Atividade tirada da agenda')+' ('+old+').':(tp&&tp!==oldT?'Mudou de '+TPN[oldT]+' ('+old+') para '+TPN[tp]+' em '+fdh(d,h)+'.':(oldT==='visita'?'Visita remarcada':'Data alterada')+' de '+old+' para '+fdh(d,h)+'.');
     c.updates=[{t:new Date().toISOString(),tipo:'comentario',txt:txt+(m?' Motivo: '+m:'')}].concat(c.updates||[]);save(c)}
@@ -1508,8 +1508,9 @@ $('grid').addEventListener('click',e=>{const t=e.target.closest('[data-tgrp]');i
 const _sv=p=>`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px">${p}</svg>`;
 const SVG_UD=_sv('<path d="M8 4v16M4 8l4-4 4 4M16 20V4M12 16l4 4 4-4"/>'),SVG_UP=_sv('<path d="M12 20V4M6 10l6-6 6 6"/>'),SVG_DN=_sv('<path d="M12 4v16M6 14l6 6 6-6"/>');
 // versões do sistema
-const APP_VER='4.13';
+const APP_VER='4.14';
 const VERSOES=[
+ ['4.14','14/11/2026','Toda visita marcada vai para o CRM como Visita; nome na Agenda abre a ficha; Meu trabalho abre no Kanban'],
  ['4.13','14/11/2026','Remarcar visita: escolher se vira Visita, Retorno ou Follow-up'],
  ['4.12','14/11/2026','Ficha: nome, Copiar e Fechar ficam presos no topo ao rolar'],
  ['4.11','14/11/2026','Agenda mostra todos os telefones do contato (não só o primeiro)'],
@@ -1811,7 +1812,7 @@ function agendaRows(){const inc=$('aAll').checked;return Object.values(CLI).filt
 function miniCard(c){const late=c.proximo<today()&&ETAPAS_ATIVAS.includes(c.etapa);return `<button type="button" class="mini" data-open="${c.id}" style="border-left-color:${optColor(colById('etapa'),c.etapa)}"><b>${c.proxH?`<span class="mh">${esc(c.proxH)}</span> `:''}${esc(c.nome)}</b><span>${c._p?'':({visita:'Visita',retorno:'Retorno',fup:'Follow-up'}[proxTipo(c)]+' · ')}${esc(c.etapa)}${c.emp&&c.emp[0]?' · '+esc(c.emp[0]):''}</span></button>`}
 let PEV={};
 function pCard(c){const e=c._p,late=e.d<today();
-  return `<div class="act pact"><div class="top"><button type="button" class="nm nmb" data-ptog>${esc(e.nome)}</button><span class="${late&&e.tipo==='retorno'?'late':'hint'}">${e.tipo==='visita'?'Visita'+(e.h?' · '+e.h:''):'Retorno'+(late?' atrasado':'')} · Prospecção</span></div>
+  return `<div class="act pact"><div class="top">${(()=>{const cl=window.CRM_find?window.CRM_find(e.cnpj,e.tels):null;return cl?`<button type="button" class="nm nmb" data-open="${esc(cl.id)}">${esc(e.nome)}</button>`:`<button type="button" class="nm nmb" data-ptog>${esc(e.nome)}</button>`})()}<span class="${late&&e.tipo==='retorno'?'late':'hint'}">${e.tipo==='visita'?'Visita'+(e.h?' · '+e.h:''):'Retorno'+(late?' atrasado':'')} · Prospecção</span></div>
    ${e.empresa?`<div class="hint">${esc(e.empresa)}</div>`:''}<div class="pobs"${e.obs?'':' style="background:none;border:0;padding:0"'}>${e.obs?`<b>Obs.:</b> <span class="pobst">${esc(e.obs)}</span> `:''}<button type="button" class="lnk pobsed" data-pobsed="${esc(e.cnpj)}">${e.obs?'Editar':'+ Observação'}</button></div>
    ${telRows((e.tels&&e.tels.length?e.tels:[]).concat(e.cel?[e.cel]:[]))}<div class="row"><button class="btn sm" type="button" data-plig="${e.cnpj}">Pôr na lista para ligar</button>${pCrmBtn(e)}</div>${(()=>{const cl=window.CRM_find?window.CRM_find(e.cnpj,e.tels):null;return cicRow('p',e.cnpj,(cl&&cl.cic)||e.cic||'')})()}${e.tipo==='visita'?remBox('p',e.cnpj,e.d,e.h,true,c._open):remBox('r',e.cnpj,e.d,e.h||'',false,c._open)}</div>`}
 function telRows(list){const seen=new Set();return list.map(t=>String(t||'').replace(/\D/g,'').replace(/^55(?=\d{10,11}$)/,'')).filter(t=>t&&!seen.has(t)&&seen.add(t)).map(t=>`<div class="row"><span class="mono">${fmtTel(t)}</span><button class="btn sm" type="button" data-copy="${dial(t)}">Copiar</button><a class="btn sm ghost" href="https://wa.me/55${t}" target="_blank" rel="noopener">WhatsApp</a></div>`).join('')}
@@ -1967,7 +1968,7 @@ $('expBtn').addEventListener('click',async()=>{
 // ---------- render geral + dados
 let rT;function renderAll(){clearTimeout(rT);rT=setTimeout(()=>{if(!$('v-inicio').hidden){renderInicio();renderMetricas()}if(!$('v-trabalho').hidden)renderTrabalho();if(!$('v-agenda').hidden)renderAgenda()},30)}
 async function init(){
-  try{const v=localStorage.getItem('crm_v');if(v){view=v;document.querySelectorAll('[data-view]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.view===v))}}catch(e){}
+  // Meu trabalho sempre abre no Kanban
   try{db=window.claude&&await window.claude.use('db')}catch(e){db=null}
   if(!db){$('syncState').textContent='Sem conexão com a sua conta. Abra pelo Claude.';renderAll();return}
   col=db.collection('clientes');cfgRef=db.doc('config/main');
@@ -2023,10 +2024,10 @@ window.CRM_fromProspect=(o,done)=>{
 window.CRM_cics=()=>[...new Set(Object.values(CLI).map(c=>(c.cic||'').trim()).filter(Boolean))];
 window.CRM_autoFromProspect=o=>{try{const now=new Date().toISOString();let c=Object.values(CLI).find(x=>x.cnpj&&x.cnpj===o.cnpj);
   const txt='Prospecção: agendou visita'+(o.visita?' para '+fmtD(o.visita)+(o.visitaH?' às '+o.visitaH:''):'')+(o.cic?' · ligação com CIC '+o.cic:'')+(o.obs?' · '+o.obs:'');
-  if(c){if(o.cic&&!c.cic)c.cic=o.cic;c.updates=[{t:now,tipo:'ligacao',txt}].concat(c.updates||[]);if(o.visita){c.proximo=o.visita;c.proxH=o.visitaH||''}
+  if(c){if(o.cic&&!c.cic)c.cic=o.cic;c.updates=[{t:now,tipo:'ligacao',txt}].concat(c.updates||[]);if(o.visita){c.proximo=o.visita;c.proxH=o.visitaH||'';c.proxTipo='visita'}
     if(!c.etapa||c.etapa==='Demandas'){c.log=(c.log||[]).concat([{t:now,etapa:'Agendou'}]);c.etapa='Agendou'}save(c);renderAll();toast('Visita registrada no CRM · '+c.nome);return}
   const obs=[o.obs,o.atividade,o.bairro?'Bairro: '+o.bairro:'',o.capital?'Capital social: '+brl(o.capital):''].filter(Boolean).join('\n');
-  c={id:'p'+o.cnpj,cnpj:o.cnpj,nome:o.nome||o.empresa||'Sem nome',cel:o.cel||'',empresa:o.empresa||'',etapa:'Agendou',proximo:o.visita||'',proxH:o.visitaH||'',perfil:'',prioridade:'',emp:[],
+  c={id:'p'+o.cnpj,cnpj:o.cnpj,nome:o.nome||o.empresa||'Sem nome',cel:o.cel||'',empresa:o.empresa||'',etapa:'Agendou',proximo:o.visita||'',proxH:o.visitaH||'',proxTipo:o.visita?'visita':'',perfil:'',prioridade:'',emp:[],
     origem:'Prospecção',cic:o.cic||'',tags:[],obs,custom:{},valor:'',previsao:'',updates:[{t:now,tipo:'ligacao',txt}],log:[{t:now,etapa:'Agendou'}],criado:now,upd:now,
     fonte:o.fonte&&o.fonte!=='Receita Federal'?'Lista '+o.fonte:'Prospecção (Receita Federal)'};
   save(c);renderAll();toast('Cliente criado no CRM · '+c.nome)}catch(e){console.error('CRM ponte',e)}};
@@ -2958,6 +2959,7 @@ window.PROSP_msgs=d=>{const t=today();const out=[];for(const L of Object.values(
     out.push({id:L.cnpj,nome:L.socio||L.empresa||'',empresa:L.socio&&L.empresa&&norm(L.empresa)!==norm(L.socio)?L.empresa:'',cel,dia:e.dia,ok:!!e.ok,late:!e.ok&&e.dia<t,obs:l&&l.obs||''})}
   return out.sort((a,b)=>(a.ok-b.ok)||a.dia.localeCompare(b.dia))};
 window.PROSP_msgSent=(id,ok)=>{const L=LEADS[id];if(!L||!L.envio)return;const N=Object.assign({},L,{envio:Object.assign({},L.envio,{ok,okT:ok?new Date().toISOString():''}),upd:new Date().toISOString()});LEADS[id]=N;put(N)};
+window.PROSP_toCrm=id=>{const L=LEADS[id];if(!L||!L.visita||!window.CRM_autoFromProspect)return;const r=rowOf(L.cnpj),cel=(L.tels||[]).find(t=>t.cel&&t.s!=='c')||(L.tels||[])[0];window.CRM_autoFromProspect({cnpj:L.cnpj,nome:(r&&r[27]==='Receita Federal'&&ownerOf(r))||L.socio||L.empresa,empresa:L.empresa,cel:cel?cel.t:'',visita:L.visita,visitaH:L.visitaH||'',obs:L.obs||'',atividade:L.atividade,bairro:L.bairro,capital:L.capital,fonte:r?r[27]:'',cic:L.cic||''})};
 window.PROSP_tels=id=>{const L=LEADS[id];return L?(L.tels||[]).map(t=>t.t):[]};
 window.PROSP_stats=(a,b)=>{const r={lig:0,nao:0,atendeu:0,retornar:0,agendou:0,sem:0,errado:0,disp:0};try{eachCall((s,k)=>{if(k>=a&&k<=b){r.lig++;if(r[s]!=null)r[s]++}});for(const L of Object.values(LEADS))for(const t of L.disp||[]){const k=dayOf(t);if(k>=a&&k<=b)r.disp++}}catch(e){console.error(e)}r.fal=r.atendeu+r.retornar+r.agendou+r.sem;return r};
 window.PROSP_events=()=>{const out=[];try{for(const L of Object.values(LEADS)){if(!L||!L.cnpj)continue;const r=rowOf(L.cnpj);const nome=(r&&r[27]==='Receita Federal'&&ownerOf(r))||L.socio||L.empresa||'';
