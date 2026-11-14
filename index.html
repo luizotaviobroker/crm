@@ -19,8 +19,9 @@ a.tellink::before{content:'';width:15px;height:15px;margin-right:6px;background:
 .authgate .ghost{background:none;color:#617284;font-size:14px;padding:6px}
 .authgate input[type=file]{display:none}
 body.gcon a.gcal{display:none!important}
+#sbar{position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top,0px);background:var(--bg,#f2f5f7);z-index:2147483000;pointer-events:none}
 </style>
-<div class="authgate" id="authGate"><div class="ag"><img src="icon-192.png" alt=""><b>CRM Ginco</b><p id="agMsg">Abrindo…</p><button type="button" id="agIn" hidden>Entrar com Google</button>
+<div id="sbar"></div><div class="authgate" id="authGate"><div class="ag"><img src="icon-192.png" alt=""><b>CRM Ginco</b><p id="agMsg">Abrindo…</p><button type="button" id="agIn" hidden>Entrar com Google</button>
 <div id="agImp" hidden style="display:grid;gap:8px"><label class="file" for="agFile">Escolher arquivo de backup</label><input type="file" id="agFile" accept=".json,application/json"><button type="button" class="ghost" id="agSkip">Começar com o CRM vazio</button></div></div></div>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap">
@@ -1505,8 +1506,9 @@ $('grid').addEventListener('click',e=>{const t=e.target.closest('[data-tgrp]');i
 const _sv=p=>`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px">${p}</svg>`;
 const SVG_UD=_sv('<path d="M8 4v16M4 8l4-4 4 4M16 20V4M12 16l4 4 4-4"/>'),SVG_UP=_sv('<path d="M12 20V4M6 10l6-6 6 6"/>'),SVG_DN=_sv('<path d="M12 4v16M6 14l6 6 6-6"/>');
 // versões do sistema
-const APP_VER='4.9';
+const APP_VER='4.10';
 const VERSOES=[
+ ['4.10','14/11/2026','Topo da tela sem o efeito esmaecido no iPhone e no iPad'],
  ['4.9','14/11/2026','Cliente com CIC “Mariana, Estefany” passa para Estefany'],
  ['4.8','14/11/2026','CICs em ordem alfabética; novo CIC João Gabriel Oshiro'],
  ['4.7','14/11/2026','Sai o “Enviar material hoje” e a lista Mensagens para enviar'],
