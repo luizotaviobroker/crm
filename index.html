@@ -1505,8 +1505,9 @@ $('grid').addEventListener('click',e=>{const t=e.target.closest('[data-tgrp]');i
 const _sv=p=>`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px">${p}</svg>`;
 const SVG_UD=_sv('<path d="M8 4v16M4 8l4-4 4 4M16 20V4M12 16l4 4 4-4"/>'),SVG_UP=_sv('<path d="M12 20V4M6 10l6-6 6 6"/>'),SVG_DN=_sv('<path d="M12 4v16M6 14l6 6 6-6"/>');
 // versões do sistema
-const APP_VER='4.5';
+const APP_VER='4.6';
 const VERSOES=[
+ ['4.6','14/11/2026','Agenda: tocar em qualquer parte do dia (até no nome) abre o dia, não o cliente'],
  ['4.5','14/11/2026','Métricas: botão Ontem, período De/até e ligações abertas por resultado (atenderam, não atenderam, agendaram, retorno, sem interesse, número errado, disparos)'],
  ['4.4','13/11/2026','Agenda abre sempre no dia de hoje; botão Voltar para hoje quando outro dia está selecionado'],
  ['4.3','13/11/2026','Meta diária: 20 ligações (e 6 faladas)'],
@@ -1823,7 +1824,7 @@ function renderAgenda(){
     h='<div class="cal">'+['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'].map(d=>`<div class="dow">${d}</div>`).join('');
     let tot=0;
     for(let i=0;i<42;i++){const d=new Date(start);d.setDate(start.getDate()+i);const k=d.toLocaleDateString('sv');const l=by[k]||[];if(d.getMonth()===m.getMonth())tot+=l.length;
-      h+=`<div class="cday ${d.getMonth()!==m.getMonth()?'out':''} ${k===t?'today':''} ${k===selDay?'sel':''}" data-day="${k}"><div class="dn">${d.getDate()}${l.length?`<span class="n">${l.length}</span>`:''}</div>${l.slice(0,3).map(c=>`<div class="cn" role="button" tabindex="0" data-open="${esc(c.id)}" style="border-left-color:${optColor(colById('etapa'),c.etapa)}">${c.proxH?`<b class="mh">${esc(c.proxH)}</b> `:''}${esc(c.nome)}</div>`).join('')}${l.length>3?`<div class="hint">+${l.length-3}</div>`:''}</div>`}
+      h+=`<div class="cday ${d.getMonth()!==m.getMonth()?'out':''} ${k===t?'today':''} ${k===selDay?'sel':''}" data-day="${k}"><div class="dn">${d.getDate()}${l.length?`<span class="n">${l.length}</span>`:''}</div>${l.slice(0,3).map(c=>`<div class="cn" style="border-left-color:${optColor(colById('etapa'),c.etapa)}">${c.proxH?`<b class="mh">${esc(c.proxH)}</b> `:''}${esc(c.nome)}</div>`).join('')}${l.length>3?`<div class="hint">+${l.length-3}</div>`:''}</div>`}
     h+='</div>';$('aCount').textContent=tot+' contatos no mês';
   }else if(aView==='semana'){
     const base=new Date(selDay+'T12:00');const st=new Date(base);st.setDate(base.getDate()-((base.getDay()+6)%7));
