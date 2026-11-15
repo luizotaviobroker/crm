@@ -1508,8 +1508,9 @@ $('grid').addEventListener('click',e=>{const t=e.target.closest('[data-tgrp]');i
 const _sv=p=>`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px">${p}</svg>`;
 const SVG_UD=_sv('<path d="M8 4v16M4 8l4-4 4 4M16 20V4M12 16l4 4 4-4"/>'),SVG_UP=_sv('<path d="M12 20V4M6 10l6-6 6 6"/>'),SVG_DN=_sv('<path d="M12 4v16M6 14l6 6 6-6"/>');
 // versões do sistema
-const APP_VER='4.14';
+const APP_VER='4.15';
 const VERSOES=[
+ ['4.15','15/11/2026','Prospecção: novos segmentos Agro (fazendeiros, serviços, cerealistas) e Holdings'],
  ['4.14','14/11/2026','Toda visita marcada vai para o CRM como Visita; nome na Agenda abre a ficha; Meu trabalho abre no Kanban'],
  ['4.13','14/11/2026','Remarcar visita: escolher se vira Visita, Retorno ou Follow-up'],
  ['4.12','14/11/2026','Ficha: nome, Copiar e Fechar ficam presos no topo ao rolar'],
@@ -2053,7 +2054,11 @@ const SEGS=[
  ['Restaurantes',['5611201','5611203','5611204','5611205']],
  ['Saúde',['8630501','8630502','8630503','8630504','8640202','8640205','8650004','8650003','8650002','7500100']],
  ['Advocacia',['6911701']],
- ['Agro: insumos e máquinas',['4683400','4661300','4623199','4623106','4623108']],
+ ['Agro: fazendeiros (soja, milho, algodão, gado)',["0111301", "0111302", "0111303", "0111399", "0112101", "0112102", "0112199", "0113000", "0114800", "0115600", "0116401", "0116402", "0116403", "0116499", "0119901", "0119902", "0119903", "0119904", "0119905", "0119906", "0119907", "0119908", "0119909", "0119999", "0121101", "0121102", "0122900", "0131800", "0132600", "0133401", "0133402", "0133403", "0133404", "0133405", "0133406", "0133407", "0133408", "0133409", "0133410", "0133411", "0133499", "0134200", "0135100", "0139301", "0139302", "0139303", "0139304", "0139305", "0139306", "0139399", "0141501", "0141502", "0142300", "0151201", "0151202", "0151203", "0152101", "0152102", "0152103", "0153901", "0153902", "0154700", "0155501", "0155502", "0155503", "0155504", "0155505", "0159801", "0159802", "0159804", "0159899", "0170900"]],
+ ['Agro: serviços (colheita, pulverização, pós-colheita)',["0161001", "0161002", "0161003", "0161099", "0162801", "0162802", "0162803", "0162899", "0163600"]],
+ ['Agro: grãos e armazéns (cerealistas)',['4622200','4623101','5211701','5211799']],
+ ['Agro: insumos e máquinas',['4683400','4661300','4623199','4623106','4623108','4683400']],
+ ['Holdings (patrimônio familiar)',['6462000','6463800']],
  ['Contadores (parceiros)',['6920601','6920602']],
 ];
 // nunca mostrar: corretores e imobiliárias (concorrência, não cliente)
