@@ -847,6 +847,8 @@ nav.side .foot .verb:hover{text-decoration-color:currentColor}
 @media (max-width:600px){#v-trabalho.qopen .mtitle{display:none}}
 .kanban:where(:not(#v-prosp *):not(#prospHome *)){overscroll-behavior-x:contain}.kcol:where(:not(#v-prosp *):not(#prospHome *)) .kbody{overscroll-behavior-x:auto;overscroll-behavior-y:none}.dpanel,.dright .feed{overscroll-behavior:contain}
 html,body{overscroll-behavior-y:none}
+:is(#v-prosp,#prospHome) .segs{overscroll-behavior-x:none}
+:is(#v-prosp,#prospHome) aside.filters,:is(#v-prosp,#prospHome) aside.filters.open{overscroll-behavior:none}
 /* colunas encolhidas na lista */
 table.grid th.thmin{padding:0!important;width:44px!important;min-width:44px!important;max-width:44px!important}
 table.grid th.thmin .cmin{width:100%;height:40px;font-size:11px;font-weight:700;color:var(--muted);overflow:hidden;text-overflow:clip;white-space:nowrap;padding:0 4px}
@@ -1508,8 +1510,9 @@ $('grid').addEventListener('click',e=>{const t=e.target.closest('[data-tgrp]');i
 const _sv=p=>`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px">${p}</svg>`;
 const SVG_UD=_sv('<path d="M8 4v16M4 8l4-4 4 4M16 20V4M12 16l4 4 4-4"/>'),SVG_UP=_sv('<path d="M12 20V4M6 10l6-6 6 6"/>'),SVG_DN=_sv('<path d="M12 4v16M6 14l6 6 6-6"/>');
 // versões do sistema
-const APP_VER='4.15';
+const APP_VER='4.16';
 const VERSOES=[
+ ['4.16','16/11/2026','Prospecção: filtros e barra de segmentos sem o efeito elástico'],
  ['4.15','15/11/2026','Prospecção: novos segmentos Agro (fazendeiros, serviços, cerealistas) e Holdings'],
  ['4.14','14/11/2026','Toda visita marcada vai para o CRM como Visita; nome na Agenda abre a ficha; Meu trabalho abre no Kanban'],
  ['4.13','14/11/2026','Remarcar visita: escolher se vira Visita, Retorno ou Follow-up'],
