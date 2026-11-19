@@ -173,7 +173,8 @@ td .copyb{border:1px solid var(--accent);background:var(--accent-soft);border-ra
 .drawer{position:fixed;inset:0;z-index:60;display:flex;justify-content:flex-end;background:rgba(0,0,0,.35)}
 .drawer[hidden]{display:none}
 .dpanel{width:min(1100px,100%);height:100%;background:var(--panel);overflow:auto;padding:18px 20px calc(30px + env(safe-area-inset-bottom,0px));padding-right:max(20px,env(safe-area-inset-right,0px));padding-top:calc(18px + env(safe-area-inset-top,0px));display:grid;gap:16px;align-content:start}
-.dpanel .dh{display:flex;gap:10px;align-items:center;position:sticky;top:calc(-18px - env(safe-area-inset-top,0px));z-index:5;background:var(--panel);margin:calc(-18px - env(safe-area-inset-top,0px)) -20px 0;padding:calc(12px + env(safe-area-inset-top,0px)) 20px 12px;border-bottom:1px solid var(--line);box-shadow:0 4px 10px -8px rgba(0,0,0,.25)}
+.dpanel{padding-top:0!important}
+.dpanel .dh{display:flex;gap:10px;align-items:center;position:sticky;top:0;z-index:5;background:var(--panel);margin:0 -20px 0;padding:calc(12px + env(safe-area-inset-top,0px)) 20px 12px;border-bottom:1px solid var(--line);box-shadow:0 4px 10px -8px rgba(0,0,0,.25)}
 .dpanel .dh input{flex:1;min-width:0}
 .dpanel .dh [data-closed]{min-height:42px;padding:8px 16px;font-size:15px;background:var(--accent-soft);border-color:var(--accent);color:var(--ink)}
 .dpanel .dh input{font-family:var(--display);font-weight:800;font-size:22px;border:1px solid transparent;background:none;padding:4px 6px}
@@ -1520,8 +1521,9 @@ $('grid').addEventListener('click',e=>{const t=e.target.closest('[data-tgrp]');i
 const _sv=p=>`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px">${p}</svg>`;
 const SVG_UD=_sv('<path d="M8 4v16M4 8l4-4 4 4M16 20V4M12 16l4 4 4-4"/>'),SVG_UP=_sv('<path d="M12 20V4M6 10l6-6 6 6"/>'),SVG_DN=_sv('<path d="M12 4v16M6 14l6 6 6-6"/>');
 // versões do sistema
-const APP_VER='4.23';
+const APP_VER='4.24';
 const VERSOES=[
+ ['4.24','19/11/2026','Ficha: nome e Fechar presos no topo também no iPhone/iPad'],
  ['4.23','19/11/2026','Empresa com mais de um sócio: escolha “Falei com” e é esse nome que vai para o CRM e a Agenda'],
  ['4.22','19/11/2026','Empreendimentos, origens, CICs e demais listas de opções em ordem alfabética'],
  ['4.21','18/11/2026','Corrige o Copiar do nome na Agenda (copiava “undefined”)'],
