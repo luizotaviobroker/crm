@@ -851,6 +851,7 @@ html,body{overscroll-behavior-y:none}
 :is(#v-prosp,#prospHome) .segs{overscroll-behavior-x:none}
 :is(#v-prosp,#prospHome) aside.filters,:is(#v-prosp,#prospHome) aside.filters.open{overscroll-behavior:none}
 :is(#v-prosp,#prospHome) aside.filters{overflow-x:hidden!important;min-width:0}
+.falou{display:flex;gap:8px;align-items:center;font-size:14px;color:var(--muted);margin:6px 0}.falou select{width:auto;max-width:100%}
 :is(#v-prosp,#prospHome) aside.filters .two{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
 :is(#v-prosp,#prospHome) aside.filters :is(input,select,textarea){min-width:0;max-width:100%;box-sizing:border-box}
 :is(#v-prosp,#prospHome) aside.filters input[type=date]{width:100%;-webkit-appearance:none;appearance:none}
@@ -1519,8 +1520,9 @@ $('grid').addEventListener('click',e=>{const t=e.target.closest('[data-tgrp]');i
 const _sv=p=>`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px">${p}</svg>`;
 const SVG_UD=_sv('<path d="M8 4v16M4 8l4-4 4 4M16 20V4M12 16l4 4 4-4"/>'),SVG_UP=_sv('<path d="M12 20V4M6 10l6-6 6 6"/>'),SVG_DN=_sv('<path d="M12 4v16M6 14l6 6 6-6"/>');
 // versões do sistema
-const APP_VER='4.22';
+const APP_VER='4.23';
 const VERSOES=[
+ ['4.23','19/11/2026','Empresa com mais de um sócio: escolha “Falei com” e é esse nome que vai para o CRM e a Agenda'],
  ['4.22','19/11/2026','Empreendimentos, origens, CICs e demais listas de opções em ordem alfabética'],
  ['4.21','18/11/2026','Corrige o Copiar do nome na Agenda (copiava “undefined”)'],
  ['4.20','18/11/2026','Agenda: botão Copiar ao lado do nome'],
@@ -2492,7 +2494,7 @@ function dupTag(r){if(!r)return '';const cs=sameContact(r);if(cs.length<2)return
   return `<button type="button" class="dup" data-dup="${esc(r[0])}">Duplicado · ${n>1?n+' listas':cs.length+'x na lista'}</button>`}
 function crmTag(id,tels){if(!window.CRM_find||!id)return '';const c=window.CRM_find(id,tels);return c?`<button type="button" class="crmok" data-crmopen="${esc(c.id)}" title="Abrir a ficha no CRM">✓ No CRM · ${esc(c.etapa||'')}</button>`:`<button type="button" class="crmbtn" data-tocrm="${esc(id)}" title="Criar este contato como cliente no CRM">→ Enviar ao CRM</button>`}
 function crmPayload(id){const r=rowOf(id),L=LEADS[id];const tels=L?L.tels:(r?r[C.tels].map((t,i)=>({t,s:(r[C.selo]||[])[i],cel:isCel(t)})):[]);const cel=tels.find(p=>p.cel&&p.s!=='c')||tels.find(p=>p.cel);
-  const rf=r&&r[27]==='Receita Federal';return {cnpj:id,nome:(rf&&ownerOf(r))||(L&&L.socio)||(r?ownerOf(r):'')||(L&&L.empresa)||(r?titleCase(r[C.fant]||r[C.razao]):''),empresa:L?L.empresa:(r?titleCase(r[C.fant]||r[C.razao]):''),cel:cel?cel.t:'',fonte:r?r[27]:'',
+  const rf=r&&r[27]==='Receita Federal';return {cnpj:id,nome:(L&&L.contato)||(rf&&ownerOf(r))||(L&&L.socio)||(r?ownerOf(r):'')||(L&&L.empresa)||(r?titleCase(r[C.fant]||r[C.razao]):''),empresa:L?L.empresa:(r?titleCase(r[C.fant]||r[C.razao]):''),cel:cel?cel.t:'',fonte:r?r[27]:'',
     atividade:L?L.atividade:(rf?(META.cnaes[r[C.cnae]]||''):(r?'Lista '+r[27]:'')),bairro:L?L.bairro:(r?titleCase(r[C.bairro]):''),capital:r?r[C.cap]:(L&&L.capital),obs:L?lastObs(L):'',cic:(L&&(L.cic||L.cicLast))||cicNow()||'',retorno:(L&&L.retorno)||'',visita:(L&&L.visita)||'',visitaH:(L&&L.visitaH)||''}}
 document.addEventListener('click',e=>{const b=e.target.closest('[data-tocrm]');if(b){e.preventDefault();if(!window.CRM_fromProspect)return;const pid=b.dataset.tocrm;window.CRM_fromProspect(crmPayload(pid),(tp)=>{try{const L=LEADS[pid];if(L&&L.retorno){const N=Object.assign({},L,{retorno:'',upd:new Date().toISOString()});LEADS[pid]=N;put(N)}render();renderLeads();renderHoje()}catch(er){}});return}
   const o=e.target.closest('[data-crmopen]');if(o){e.preventDefault();if(window.CRM_open)window.CRM_open(o.dataset.crmopen)}});
@@ -2678,6 +2680,7 @@ function leadCard(L){
       ${FAL(L.status)?`<div class="subst">${SUBS.map(([k,n])=>`<button type="button" data-sub="${k}" class="${L.status===k?'on':''}" aria-pressed="${L.status===k}">${n}</button>`).join('')}</div>`:''}
       ${L.status==='agendou'?`<div class="visbox"><div class="rq"><input type="date" data-vis value="${esc(L.visita||'')}" min="${today()}"><input type="time" data-vish value="${esc(L.visitaH||'')}" aria-label="Horário">${[[1,'Amanhã'],[2,'+2d'],[7,'+7d']].map(([n,l])=>`<button type="button" class="seg${L.visita===addDays(n)?' on':''}" data-vq="${n}">${l}</button>`).join('')}</div></div>`:''}
       ${ret?`<div class="retbox"><div class="rq"><input type="date" data-ret value="${esc(L.retorno)}" min="${today()}">${[[1,'Amanhã'],[2,'+2d'],[7,'+7d'],[14,'+14d']].map(([n,l])=>`<button type="button" class="seg${L.retorno===addDays(n)?' on':''}" data-rq="${n}">${l}</button>`).join('')}</div></div>`:''}
+      ${(()=>{const ns=[...new Set(socList(rowOf(L.cnpj)).map(x=>titleCase(x[0])))];return FAL(L.status)&&ns.length>1?`<label class="falou">Falei com <select data-falou aria-label="Com quem você falou">${ns.map(n=>`<option${(L.contato||ns[0])===n?' selected':''}>${esc(n)}</option>`).join('')}</select></label>`:''})()}
       <div class="obsrow"><input type="text" class="obs" data-obs value="${esc(L.obs)}" placeholder="Observação (opcional)"><select class="cicin" data-cic data-lzc="${esc(L.cic||'')}" aria-label="CIC desta ligação"><option value="${esc(L.cic||'')}" selected>${L.cic?esc(L.cic):(cicNow()?'CIC: '+esc(cicNow())+' (do topo)':'CIC: ninguém')}</option></select></div>
     </div>
     <div class="lc-act"><button class="btn sm primary" type="button" data-save ${L.status==='novo'||(ret&&!L.retorno)||(L.status==='agendou'&&!L.visita)?'disabled':''}>${ret&&L.retorno?'Salvar · retorno '+L.retorno.split('-').reverse().slice(0,2).join('/'):L.status==='agendou'&&L.visita?'Salvar · visita '+L.visita.split('-').reverse().slice(0,2).join('/'):'Salvar'}</button><button class="btn sm ghost" type="button" data-out>Tirar</button></div>
@@ -2691,7 +2694,7 @@ async function saveCall(L){
   const cic=(L.cic||cicNow()||'').trim();
   const N=Object.assign({},L,{mat:false,envio:env,cicLast:cic||L.cicLast||'',cic:'',hist:dup?L.hist:L.hist.concat([Object.assign({s:L.status,t,obs:L.obs||''},cic?{cic}:{},ret?{ret}:{},L.status==='agendou'?{vis,visH:L.visitaH||''}:{})]),inList:false,status:'novo',statusT:'',obs:'',retorno:ret,visita:vis,visitaH:L.status==='agendou'?(L.visitaH||''):(lastV?(lastV.visH||''):''),upd:new Date().toISOString()});
   LEADS[L.cnpj]=N;PEND.set(L.cnpj,{doc:N,t:Date.now()});
-  if(L.status==='agendou'&&window.CRM_autoFromProspect){const r=rowOf(L.cnpj),cel=(L.tels||[]).find(t=>t.cel&&t.s!=='c');window.CRM_autoFromProspect({cnpj:L.cnpj,nome:(r&&r[27]==='Receita Federal'&&ownerOf(r))||L.socio||L.empresa,empresa:L.empresa,cel:cel?cel.t:'',visita:vis,visitaH:L.visitaH||'',obs:L.obs||'',atividade:L.atividade,bairro:L.bairro,capital:L.capital,fonte:r?r[27]:'',cic})}
+  if(L.status==='agendou'&&window.CRM_autoFromProspect){const r=rowOf(L.cnpj),cel=(L.tels||[]).find(t=>t.cel&&t.s!=='c');window.CRM_autoFromProspect({cnpj:L.cnpj,nome:L.contato||(r&&r[27]==='Receita Federal'&&ownerOf(r))||L.socio||L.empresa,empresa:L.empresa,cel:cel?cel.t:'',visita:vis,visitaH:L.visitaH||'',obs:L.obs||'',atividade:L.atividade,bairro:L.bairro,capital:L.capital,fonte:r?r[27]:'',cic})}
   return put(N);
 }
 async function removeFromList(L){
@@ -2719,7 +2722,7 @@ $('v-lista').addEventListener('click',async e=>{
   if(e.target.closest('[data-out]')){await removeFromList(L);render();renderLeads()}
 });
 $('v-lista').addEventListener('change',e=>{const card=e.target.closest('[data-id]');if(!card)return;const L=LEADS[card.dataset.id];if(!L)return;
-  const patch=e.target.matches('[data-ret]')?{retorno:e.target.value}:e.target.matches('[data-vis]')?{visita:e.target.value}:e.target.matches('[data-vish]')?{visitaH:e.target.value}:e.target.matches('[data-obs]')?{obs:e.target.value.slice(0,500)}:e.target.matches('[data-cic]')?{cic:e.target.value}:null;
+  const patch=e.target.matches('[data-ret]')?{retorno:e.target.value}:e.target.matches('[data-vis]')?{visita:e.target.value}:e.target.matches('[data-vish]')?{visitaH:e.target.value}:e.target.matches('[data-obs]')?{obs:e.target.value.slice(0,500)}:e.target.matches('[data-cic]')?{cic:e.target.value}:e.target.matches('[data-falou]')?{contato:e.target.value}:null;
   if(patch){const N=Object.assign({},L,patch,{upd:new Date().toISOString()});LEADS[L.cnpj]=N;put(N);if(patch.retorno!==undefined||patch.visita!==undefined){if(pickerOpen())PICK_PEND=true;else renderLeads()}}});
 // iPad: a roleta de data/hora dispara "change" enquanto gira. Redesenhar a lista nessa hora fecha a roleta.
 // Enquanto um campo de data/hora estiver em uso, a tela espera; redesenha quando ele perde o foco.
@@ -2979,10 +2982,10 @@ window.PROSP_editObs=(id,txt)=>{const L=LEADS[id];if(!L)return false;const H=(L.
   const N=Object.assign({},L,i>=0?{hist:H.map((x,k)=>k===i?Object.assign({},x,{obs:txt}):x)}:{obs:txt},{upd:new Date().toISOString()});LEADS[id]=N;put(N);try{renderLeads();renderHoje()}catch(e){}return true};
 window.PROSP_msgs=d=>{const t=today();const out=[];for(const L of Object.values(LEADS)){if(!L||!L.envio)continue;const e=L.envio;
     if(d===t?!(e.dia<=t&&(!e.ok||(e.okT||'').slice(0,10)===t)):e.dia!==d)continue;const l=(L.hist||[])[L.hist.length-1];const cel=naoCel(L)||((L.tels||[])[0]||{}).t||'';
-    out.push({id:L.cnpj,nome:L.socio||L.empresa||'',empresa:L.socio&&L.empresa&&norm(L.empresa)!==norm(L.socio)?L.empresa:'',cel,dia:e.dia,ok:!!e.ok,late:!e.ok&&e.dia<t,obs:l&&l.obs||''})}
+    out.push({id:L.cnpj,nome:L.contato||L.socio||L.empresa||'',empresa:L.socio&&L.empresa&&norm(L.empresa)!==norm(L.socio)?L.empresa:'',cel,dia:e.dia,ok:!!e.ok,late:!e.ok&&e.dia<t,obs:l&&l.obs||''})}
   return out.sort((a,b)=>(a.ok-b.ok)||a.dia.localeCompare(b.dia))};
 window.PROSP_msgSent=(id,ok)=>{const L=LEADS[id];if(!L||!L.envio)return;const N=Object.assign({},L,{envio:Object.assign({},L.envio,{ok,okT:ok?new Date().toISOString():''}),upd:new Date().toISOString()});LEADS[id]=N;put(N)};
-window.PROSP_toCrm=id=>{const L=LEADS[id];if(!L||!L.visita||!window.CRM_autoFromProspect)return;const r=rowOf(L.cnpj),cel=(L.tels||[]).find(t=>t.cel&&t.s!=='c')||(L.tels||[])[0];window.CRM_autoFromProspect({cnpj:L.cnpj,nome:(r&&r[27]==='Receita Federal'&&ownerOf(r))||L.socio||L.empresa,empresa:L.empresa,cel:cel?cel.t:'',visita:L.visita,visitaH:L.visitaH||'',obs:L.obs||'',atividade:L.atividade,bairro:L.bairro,capital:L.capital,fonte:r?r[27]:'',cic:L.cic||''})};
+window.PROSP_toCrm=id=>{const L=LEADS[id];if(!L||!L.visita||!window.CRM_autoFromProspect)return;const r=rowOf(L.cnpj),cel=(L.tels||[]).find(t=>t.cel&&t.s!=='c')||(L.tels||[])[0];window.CRM_autoFromProspect({cnpj:L.cnpj,nome:L.contato||(r&&r[27]==='Receita Federal'&&ownerOf(r))||L.socio||L.empresa,empresa:L.empresa,cel:cel?cel.t:'',visita:L.visita,visitaH:L.visitaH||'',obs:L.obs||'',atividade:L.atividade,bairro:L.bairro,capital:L.capital,fonte:r?r[27]:'',cic:L.cic||''})};
 window.PROSP_tels=id=>{const L=LEADS[id];return L?(L.tels||[]).map(t=>t.t):[]};
 window.PROSP_stats=(a,b)=>{const r={lig:0,nao:0,atendeu:0,retornar:0,agendou:0,sem:0,errado:0,disp:0};try{eachCall((s,k)=>{if(k>=a&&k<=b){r.lig++;if(r[s]!=null)r[s]++}});for(const L of Object.values(LEADS))for(const t of L.disp||[]){const k=dayOf(t);if(k>=a&&k<=b)r.disp++}}catch(e){console.error(e)}r.fal=r.atendeu+r.retornar+r.agendou+r.sem;return r};
 window.PROSP_events=()=>{const out=[];try{for(const L of Object.values(LEADS)){if(!L||!L.cnpj)continue;const r=rowOf(L.cnpj);const nome=(r&&r[27]==='Receita Federal'&&ownerOf(r))||L.socio||L.empresa||'';
