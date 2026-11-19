@@ -1521,8 +1521,9 @@ $('grid').addEventListener('click',e=>{const t=e.target.closest('[data-tgrp]');i
 const _sv=p=>`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px">${p}</svg>`;
 const SVG_UD=_sv('<path d="M8 4v16M4 8l4-4 4 4M16 20V4M12 16l4 4 4-4"/>'),SVG_UP=_sv('<path d="M12 20V4M6 10l6-6 6 6"/>'),SVG_DN=_sv('<path d="M12 4v16M6 14l6 6 6-6"/>');
 // versões do sistema
-const APP_VER='4.25';
+const APP_VER='4.26';
 const VERSOES=[
+ ['4.26','19/11/2026','Ficha: Origem aparece em Dados do cliente (não fica mais oculta)'],
  ['4.25','19/11/2026','Novo CIC: Thiago Muniz'],
  ['4.24','19/11/2026','Ficha: nome e Fechar presos no topo também no iPhone/iPad'],
  ['4.23','19/11/2026','Empresa com mais de um sócio: escolha “Falei com” e é esse nome que vai para o CRM e a Agenda'],
@@ -1754,7 +1755,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-uedit],[da
 let curId=null;
 function openDrawer(id,tab){if(id!==window.__lastDr){NXEDIT=false;NXDONE=null;window.__lastDr=id}
   const c=CLI[id];if(!c)return;curId=id;closePop();
-  const BASIC=['etapa','emp','cic'],SKIP=['updates','atend','obs','proximo'];
+  const BASIC=['etapa','emp','cic','origem'],SKIP=['updates','atend','obs','proximo'];
   const basic=BASIC.map(colById).filter(Boolean),extra=COLS.filter(cd=>!BASIC.includes(cd.id)&&!SKIP.includes(cd.id)&&!['updates','atendcount'].includes(cd.type));
   const keepOpen=!!window.__drMore;
   const tl=[...(c.updates||[]).map((u,i)=>({t:u.t,u,i})),...(c.log||[]).map(l=>({t:l.t,l}))].sort((a,b)=>(b.t||'').localeCompare(a.t||''));
