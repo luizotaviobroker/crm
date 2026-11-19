@@ -1242,7 +1242,7 @@ const DEFAULT_COLS=[
  {id:'prioridade',label:'Prioridade',type:'status',show:true,options:[{v:'Alta',c:'#e2445c'},{v:'Média',c:'#fdab3d'},{v:'Baixa',c:'#579bfc'}]},
  {id:'emp',label:'Empreendimento',type:'tags',show:true,options:['Ginco Club','Florais Madri','Florais Barcelona','Florais Sevilha','Cidade Jardim','Zurique','Ginco Bosque','Manhattan','Florais do Cerrado','Florais Esmeralda','Florais Safira','Florais Pérola','Florais Chapada','Belvedere 2','Primor das Torres','Próximos lançamentos','Revenda'].map(v=>({v}))},
  {id:'origem',label:'Origem',type:'status',show:true,options:[{v:'Ligação',c:'#0086c0'},{v:'Rede pessoal',c:'#037f4c'},{v:'CIC',c:'#e2445c'},{v:'Tráfego pago',c:'#a25ddc'},{v:'Disparo',c:'#175a63'},{v:'PAP',c:'#cab641'},{v:'Plantão',c:'#00c875'},{v:'Open House',c:'#784bd1'},{v:'Permuta',c:'#ff158a'},{v:'Indicação',c:'#ff642e'},{v:'Feira',c:'#9cd326'},{v:'Prospecção',c:'#225091'}]},
- {id:'cic',label:'CIC responsável',type:'status',show:true,options:['João Matheus','Carol','Estefany','Pedro Oliveira','Ruth','Fernanda','Pedro Lima','Ryan','Lorraine','Mariana','João Gabriel','Paula','Matheus Castro','Caio','João Gabriel Oshiro'].sort((a,b)=>a.localeCompare(b,'pt-BR')).map((v,i)=>({v,c:PAL[(i+4)%PAL.length]}))},
+ {id:'cic',label:'CIC responsável',type:'status',show:true,options:['João Matheus','Carol','Estefany','Pedro Oliveira','Ruth','Fernanda','Pedro Lima','Ryan','Lorraine','Mariana','João Gabriel','Paula','Matheus Castro','Caio','João Gabriel Oshiro','Thiago Muniz'].sort((a,b)=>a.localeCompare(b,'pt-BR')).map((v,i)=>({v,c:PAL[(i+4)%PAL.length]}))},
  {id:'valor',label:'Valor (R$)',type:'moeda',show:true},
  {id:'previsao',label:'Previsão de fechamento',type:'data',show:false,hidden:true},
  {id:'obs',label:'Observações',type:'textolongo',show:false},
@@ -1521,8 +1521,9 @@ $('grid').addEventListener('click',e=>{const t=e.target.closest('[data-tgrp]');i
 const _sv=p=>`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px">${p}</svg>`;
 const SVG_UD=_sv('<path d="M8 4v16M4 8l4-4 4 4M16 20V4M12 16l4 4 4-4"/>'),SVG_UP=_sv('<path d="M12 20V4M6 10l6-6 6 6"/>'),SVG_DN=_sv('<path d="M12 4v16M6 14l6 6 6-6"/>');
 // versões do sistema
-const APP_VER='4.24';
+const APP_VER='4.25';
 const VERSOES=[
+ ['4.25','19/11/2026','Novo CIC: Thiago Muniz'],
  ['4.24','19/11/2026','Ficha: nome e Fechar presos no topo também no iPhone/iPad'],
  ['4.23','19/11/2026','Empresa com mais de um sócio: escolha “Falei com” e é esse nome que vai para o CRM e a Agenda'],
  ['4.22','19/11/2026','Empreendimentos, origens, CICs e demais listas de opções em ordem alfabética'],
@@ -2004,7 +2005,7 @@ async function init(){
   cfgRef.onSnapshot(s=>{const d=s.exists&&s.data();if(d&&Array.isArray(d.cols)){const saved=JSON.parse(JSON.stringify(d.cols));
       // garante colunas padrão novas
       const kept=saved.filter(c=>c.id!=='empresa');DEFAULT_COLS.forEach((dc,i)=>{if(!kept.some(c=>c.id===dc.id))kept.splice(Math.min(i,kept.length),0,JSON.parse(JSON.stringify(dc)))});
-      const op=kept.find(c=>c.id==='origem');if(op){op.options=op.options.filter(o=>o.v!=='Prospecção VG');if(!op.options.some(o=>o.v==='Prospecção'))op.options.push({v:'Prospecção',c:'#225091'})}const cc=kept.find(c=>c.id==='cic');if(cc){cc.options=cc.options||[];let add=false;if(!cc.options.some(o=>o.v==='João Gabriel Oshiro')){cc.options.push({v:'João Gabriel Oshiro',c:PAL[cc.options.length%PAL.length]});add=true}COLS=kept.filter(c=>c.id!=='previsao');if(add)saveCfg()}sortOpts(kept);
+      const op=kept.find(c=>c.id==='origem');if(op){op.options=op.options.filter(o=>o.v!=='Prospecção VG');if(!op.options.some(o=>o.v==='Prospecção'))op.options.push({v:'Prospecção',c:'#225091'})}const cc=kept.find(c=>c.id==='cic');if(cc){cc.options=cc.options||[];let add=false;for(const nv of ['João Gabriel Oshiro','Thiago Muniz'])if(!cc.options.some(o=>o.v===nv)){cc.options.push({v:nv,c:PAL[cc.options.length%PAL.length]});add=true}COLS=kept.filter(c=>c.id!=='previsao');if(add)saveCfg()}sortOpts(kept);
       COLS=kept.filter(c=>c.id!=='previsao');renderAll()}},()=>{});
   col.onSnapshot(s=>{const m={};for(const d of s.docs){const v=d.data();if(v)m[d.id]=JSON.parse(JSON.stringify(v))}
       // preserva edições locais ainda não confirmadas
