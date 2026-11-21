@@ -174,7 +174,7 @@ td .copyb{border:1px solid var(--accent);background:var(--accent-soft);border-ra
 .drawer[hidden]{display:none}
 .dpanel{width:min(1100px,100%);height:100%;background:var(--panel);overflow:auto;padding:18px 20px calc(30px + env(safe-area-inset-bottom,0px));padding-right:max(20px,env(safe-area-inset-right,0px));padding-top:calc(18px + env(safe-area-inset-top,0px));display:grid;gap:16px;align-content:start}
 .dpanel{padding-top:0!important}
-.dpanel .dh{display:flex;gap:10px;align-items:center;position:sticky;top:0;z-index:5;background:var(--panel);margin:0 -20px 0;padding:calc(12px + env(safe-area-inset-top,0px)) 20px 12px;border-bottom:1px solid var(--line);box-shadow:0 4px 10px -8px rgba(0,0,0,.25)}
+.dpanel .dh{display:flex;gap:10px;align-items:center;position:sticky;top:0;z-index:5;background:var(--panel);margin:0 -20px 0;padding:calc(12px + max(env(safe-area-inset-top,0px),var(--sbh,0px))) 20px 12px;border-bottom:1px solid var(--line);box-shadow:0 4px 10px -8px rgba(0,0,0,.25)}
 .dpanel .dh input{flex:1;min-width:0}
 .dpanel .dh [data-closed]{min-height:42px;padding:8px 16px;font-size:15px;background:var(--accent-soft);border-color:var(--accent);color:var(--ink)}
 .dpanel .dh input{font-family:var(--display);font-weight:800;font-size:22px;border:1px solid transparent;background:none;padding:4px 6px}
@@ -1521,8 +1521,9 @@ $('grid').addEventListener('click',e=>{const t=e.target.closest('[data-tgrp]');i
 const _sv=p=>`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px">${p}</svg>`;
 const SVG_UD=_sv('<path d="M8 4v16M4 8l4-4 4 4M16 20V4M12 16l4 4 4-4"/>'),SVG_UP=_sv('<path d="M12 20V4M6 10l6-6 6 6"/>'),SVG_DN=_sv('<path d="M12 4v16M6 14l6 6 6-6"/>');
 // versões do sistema
-const APP_VER='4.26';
+const APP_VER='4.27';
 const VERSOES=[
+ ['4.27','21/11/2026','Ficha: cabeçalho abaixo do relógio no app instalado do iPhone/iPad'],
  ['4.26','19/11/2026','Ficha: Origem aparece em Dados do cliente (não fica mais oculta)'],
  ['4.25','19/11/2026','Novo CIC: Thiago Muniz'],
  ['4.24','19/11/2026','Ficha: nome e Fechar presos no topo também no iPhone/iPad'],
@@ -1582,7 +1583,11 @@ const VERSOES=[
  ['2.0','nov/2026','CRM unificado: Prospecção dentro do CRM, agenda única, Kanban de arrastar, ficha em duas colunas'],
  ['1.x','nov/2026','Prospector: Receita Federal, Mato Grosso inteiro, sócios, BNDES, lista de ligações'],
  ['1.0','nov/2026','Prospector Várzea Grande: busca de empresas e lista para ligar']];
-$('verBtn').textContent='Versão '+APP_VER+' · '+VERSOES[0][1];
+// app instalado no iPhone/iPad: quando o sistema desenha a tela por baixo do relógio sem avisar a altura, calculamos a faixa
+(function(){try{const st=navigator.standalone||matchMedia('(display-mode: standalone)').matches;const t=document.createElement('div');t.style.cssText='position:fixed;top:0;left:0;width:1px;visibility:hidden;height:env(safe-area-inset-top,0px)';document.body.appendChild(t);const ins=Math.round(t.getBoundingClientRect().height);t.remove();let sb=0;
+  if(st&&ins<1){const H=window.innerHeight,full=Math.abs(H-screen.height)<3||Math.abs(H-screen.width)<3;const ipad=/iPad/.test(navigator.userAgent)||(/Macintosh/.test(navigator.userAgent)&&navigator.maxTouchPoints>1);if(full)sb=ipad?24:(Math.max(screen.height,screen.width)>=812?54:20)}
+  if(sb)document.documentElement.style.setProperty('--sbh',sb+'px');window.__TOPINFO='t'+ins+'/'+sb}catch(e){window.__TOPINFO='t?'}})();
+$('verBtn').textContent='Versão '+APP_VER+' · '+VERSOES[0][1]+(window.__TOPINFO?' · '+window.__TOPINFO:'');
 $('verBtn').addEventListener('click',()=>{const m=document.createElement('div');m.className='verpop';m.innerHTML='<div class="vbox"><div class="row" style="justify-content:space-between"><b>Versões</b><button class="btn sm ghost" type="button" data-vclose>Fechar</button></div>'+VERSOES.map(v=>`<div class="vit"><b>${v[0]}</b><span class="hint">${v[1]}</span><div>${esc(v[2])}</div></div>`).join('')+'</div>';m.addEventListener('click',e=>{if(e.target===m||e.target.closest('[data-vclose]'))m.remove()});document.body.appendChild(m)});
 let KCLOSE={},KSORT={};try{KCLOSE=JSON.parse(localStorage.getItem('crm_kclose')||'{}');KSORT=JSON.parse(localStorage.getItem('crm_ksort')||'{}')}catch(e){}
 $('kanban').addEventListener('click',e=>{const t=e.target.closest('[data-ktog]'),s=e.target.closest('[data-ksort]');if(!t&&!s)return;e.stopPropagation();
