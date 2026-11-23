@@ -1521,8 +1521,9 @@ $('grid').addEventListener('click',e=>{const t=e.target.closest('[data-tgrp]');i
 const _sv=p=>`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px">${p}</svg>`;
 const SVG_UD=_sv('<path d="M8 4v16M4 8l4-4 4 4M16 20V4M12 16l4 4 4-4"/>'),SVG_UP=_sv('<path d="M12 20V4M6 10l6-6 6 6"/>'),SVG_DN=_sv('<path d="M12 4v16M6 14l6 6 6-6"/>');
 // versões do sistema
-const APP_VER='4.28';
+const APP_VER='4.29';
 const VERSOES=[
+ ['4.29','23/11/2026','Ficha: botão Editar no telefone'],
  ['4.28','22/11/2026','Prospecção: segmentos Agro de insumos, máquinas e veterinária/agronomia'],
  ['4.27','21/11/2026','Ficha: cabeçalho abaixo do relógio no app instalado do iPhone/iPad'],
  ['4.26','19/11/2026','Ficha: Origem aparece em Dados do cliente (não fica mais oculta)'],
@@ -1768,7 +1769,7 @@ function openDrawer(id,tab){if(id!==window.__lastDr){NXEDIT=false;NXDONE=null;wi
   const tipoL=u=>u.tipo==='atendimento'?'<b style="color:var(--accent)">ATENDIMENTO</b>':u.tipo==='ligacao'?'<b style="color:var(--emp)">FOLLOW-UP</b>':'Comentário';
   $('dpanel').innerHTML=`<div class="dh"><input type="text" id="dName" value="${esc(c.nome)}" aria-label="Nome do cliente"><button class="btn sm" type="button" data-copy="${esc(c.nome)}">Copiar</button><button class="btn sm" type="button" data-closed>✕ Fechar</button></div>
    <div class="dcol">
-   <div class="telrow">${c.cel?`<span class="mono dtel">${fmtTel(c.cel)}</span><button class="btn sm primary" type="button" data-copy="${dial(c.cel)}">Copiar</button><a class="btn sm" href="https://wa.me/55${c.cel}" target="_blank" rel="noopener">WhatsApp</a>`:`<label class="hint" for="dTel">Telefone</label><input type="tel" id="dTel" data-fe="cel" placeholder="(65) 9 9999-9999" style="max-width:220px">`}</div>
+   <div class="telrow">${c.cel?`<span class="mono dtel">${fmtTel(c.cel)}</span><button class="btn sm primary" type="button" data-copy="${dial(c.cel)}">Copiar</button><a class="btn sm" href="https://wa.me/55${c.cel}" target="_blank" rel="noopener">WhatsApp</a><button class="btn sm ghost" type="button" data-teledit>✎ Editar</button>`:`<label class="hint" for="dTel">Telefone</label><input type="tel" id="dTel" data-fe="cel" placeholder="(65) 9 9999-9999" style="max-width:220px">`}</div>
    <div class="box"><div class="bh"><h2>Resumo do cliente</h2><span class="hint">salva sozinho</span></div><textarea data-fe="obs" id="dResumo" placeholder="Quem é, o que procura, faixa de valor, momento de compra…">${esc(c.obs||'')}</textarea></div>
    <div class="box nxbox" id="nxBox"><div class="bh"><h2>Próxima atividade</h2><span class="hint">vai para a agenda</span></div>
      ${c.proximo&&!NXEDIT?`<div class="nxcur"><div><b>${{visita:'Visita',retorno:'Retorno',fup:'Follow-up'}[proxTipo(c)]}</b> · ${new Date(c.proximo+'T12:00').toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'})}${c.proxH?' · '+c.proxH:''}${c.proximo<today()?' <span class="late">atrasada</span>':''}</div>
@@ -1807,7 +1808,7 @@ function fieldEditor(c,cd){
 }
 function closeDrawer(){if($('drawer').hidden)return;$('drawer').hidden=true;document.body.style.overflow='';curId=null}
 let DR_DOWN=null;$('drawer').addEventListener('pointerdown',e=>{DR_DOWN=e.target.id==='drawer'?Date.now():null});
-$('drawer').addEventListener('click',e=>{if(e.target.closest('[data-closed]')){closeDrawer();return}if(e.target.id==='drawer'&&DR_DOWN&&Date.now()-DR_DOWN<800)closeDrawer();DR_DOWN=null});
+$('drawer').addEventListener('click',e=>{if(e.target.closest('[data-closed]')){closeDrawer();return}const te=e.target.closest('[data-teledit]');if(te){const row=te.closest('.telrow'),c=CLI[curId]||{};row.innerHTML=`<label class="hint" for="dTel">Telefone</label><input type="tel" id="dTel" data-fe="cel" value="${esc(fmtTel(c.cel||''))}" placeholder="(65) 9 9999-9999" style="max-width:220px"><span class="hint">toque fora para salvar</span>`;const i=row.querySelector('input');i.focus();try{i.select()}catch(x){}return}if(e.target.id==='drawer'&&DR_DOWN&&Date.now()-DR_DOWN<800)closeDrawer();DR_DOWN=null});
 // no iPad a roleta de data/hora dispara "change" enquanto gira; redesenhar a ficha nessa hora fecha a roleta.
 // Então só redesenha quando o campo perde o foco.
 let DR_LATER=false;
