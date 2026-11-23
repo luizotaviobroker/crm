@@ -1521,8 +1521,9 @@ $('grid').addEventListener('click',e=>{const t=e.target.closest('[data-tgrp]');i
 const _sv=p=>`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px">${p}</svg>`;
 const SVG_UD=_sv('<path d="M8 4v16M4 8l4-4 4 4M16 20V4M12 16l4 4 4-4"/>'),SVG_UP=_sv('<path d="M12 20V4M6 10l6-6 6 6"/>'),SVG_DN=_sv('<path d="M12 4v16M6 14l6 6 6-6"/>');
 // versões do sistema
-const APP_VER='4.31';
+const APP_VER='4.32';
 const VERSOES=[
+ ['4.32','23/11/2026','Agenda: filtro de CIC vale também para visitas e retornos da prospecção'],
  ['4.31','23/11/2026','Versão aparece no fim da página inicial (celular)'],
  ['4.30','23/11/2026','Ficha: nome e Fechar abaixo do relógio no app instalado (iPhone/iPad)'],
  ['4.29','23/11/2026','Ficha: botão Editar no telefone'],
@@ -1861,7 +1862,7 @@ function renderAgenda(){
   renderChips('aChips');
   document.querySelectorAll('[data-agf]').forEach(b=>b.setAttribute('aria-pressed',AGF.has(b.dataset.agf)));
   const by={};if(AGF.has('crm'))agendaRows().forEach(c=>(by[c.proximo]=by[c.proximo]||[]).push(c));
-  PEV={};if(AGF.has('pros'))for(const e of (window.PROSP_events?window.PROSP_events():[])){const cli=window.CRM_find?window.CRM_find(e.cnpj,e.tels):null;if(cli&&cli.proximo===e.d)continue;
+  PEV={};const fAct=Object.entries(filters).filter(([k,v])=>v&&v.length),fOnlyCic=fAct.every(([k])=>k==='cic');if(AGF.has('pros')&&fOnlyCic)for(const e of (window.PROSP_events?window.PROSP_events():[])){const fc=filters.cic&&filters.cic.length?filters.cic:null;if(fc&&!fc.includes(e.cic||'(vazio)'))continue;const cli=window.CRM_find?window.CRM_find(e.cnpj,e.tels):null;if(cli&&cli.proximo===e.d)continue;
     const id='pp:'+e.tipo+':'+e.cnpj;PEV[id]=e;(by[e.d]=by[e.d]||[]).push({id,nome:e.nome,etapa:e.tipo==='visita'?'Visita (prospecção)':'Retorno (prospecção)',proximo:e.d,proxH:e.h,emp:[],_p:e})}Object.values(by).forEach(l=>l.sort((a,b)=>((a.proxH||'99:99').localeCompare(b.proxH||'99:99'))||a.nome.localeCompare(b.nome)));
   const m=calMonth;let h='';
   if(aView==='mes'){
@@ -3003,8 +3004,8 @@ window.PROSP_msgSent=(id,ok)=>{const L=LEADS[id];if(!L||!L.envio)return;const N=
 window.PROSP_toCrm=id=>{const L=LEADS[id];if(!L||!L.visita||!window.CRM_autoFromProspect)return;const r=rowOf(L.cnpj),cel=(L.tels||[]).find(t=>t.cel&&t.s!=='c')||(L.tels||[])[0];window.CRM_autoFromProspect({cnpj:L.cnpj,nome:L.contato||(r&&r[27]==='Receita Federal'&&ownerOf(r))||L.socio||L.empresa,empresa:L.empresa,cel:cel?cel.t:'',visita:L.visita,visitaH:L.visitaH||'',obs:L.obs||'',atividade:L.atividade,bairro:L.bairro,capital:L.capital,fonte:r?r[27]:'',cic:L.cic||''})};
 window.PROSP_tels=id=>{const L=LEADS[id];return L?(L.tels||[]).map(t=>t.t):[]};
 window.PROSP_stats=(a,b)=>{const r={lig:0,nao:0,atendeu:0,retornar:0,agendou:0,sem:0,errado:0,disp:0};try{eachCall((s,k)=>{if(k>=a&&k<=b){r.lig++;if(r[s]!=null)r[s]++}});for(const L of Object.values(LEADS))for(const t of L.disp||[]){const k=dayOf(t);if(k>=a&&k<=b)r.disp++}}catch(e){console.error(e)}r.fal=r.atendeu+r.retornar+r.agendou+r.sem;return r};
-window.PROSP_events=()=>{const out=[];try{for(const L of Object.values(LEADS)){if(!L||!L.cnpj)continue;const r=rowOf(L.cnpj);const nome=(r&&r[27]==='Receita Federal'&&ownerOf(r))||L.socio||L.empresa||'';
-    const cel=(L.tels||[]).find(t=>t.cel&&t.s!=='c')||(L.tels||[])[0];const base={cnpj:L.cnpj,nome,empresa:L.empresa||'',cel:cel?cel.t:'',tels:(L.tels||[]).map(t=>t.t),obs:lastObs(L),cic:L.cicLast||''};
+window.PROSP_events=()=>{const out=[];try{for(const L of Object.values(LEADS)){if(!L||!L.cnpj)continue;const r=rowOf(L.cnpj);const nome=L.contato||(r&&r[27]==='Receita Federal'&&ownerOf(r))||L.socio||L.empresa||'';
+    const cel=(L.tels||[]).find(t=>t.cel&&t.s!=='c')||(L.tels||[])[0];const base={cnpj:L.cnpj,nome,empresa:L.empresa||'',cel:cel?cel.t:'',tels:(L.tels||[]).map(t=>t.t),obs:lastObs(L),cic:L.cic||L.cicLast||''};
     if(L.visita)out.push(Object.assign({tipo:'visita',d:L.visita,h:L.visitaH||''},base));
     if(L.retorno&&retPend(L))out.push(Object.assign({tipo:'retorno',d:L.retorno,h:L.retornoH||''},base))}}catch(e){console.error(e)}return out};
 window.PROSP_day=k=>{agDay=k===today()?null:k;calM=(k||today()).slice(0,7);renderHoje()};
