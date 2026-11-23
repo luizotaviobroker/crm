@@ -934,7 +934,7 @@ table.grid tr.tgrp td.c-nome{border-left-width:4px;border-left-style:solid}
         <div class="box"><div class="bh"><h2>Interesse por empreendimento</h2><span class="hint">carteira ativa</span></div><div class="bars" id="mEmp"></div></div>
       </div>
       <div hidden><div id="kpis"></div><div id="atChart"></div><span id="atLbl"></span><div id="atTop"></div><span id="origLbl"></span><div id="origem"></div><button type="button" id="mPrev"></button><b id="mLbl"></b><button type="button" id="mNext"></button></div>
-    </section>
+    <p class="hint" id="verMob" style="text-align:center;margin:24px 0 8px;font-size:12px"></p></section>
 
     <!-- MEU TRABALHO -->
     <section class="view" id="v-trabalho" hidden>
@@ -1521,8 +1521,9 @@ $('grid').addEventListener('click',e=>{const t=e.target.closest('[data-tgrp]');i
 const _sv=p=>`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px">${p}</svg>`;
 const SVG_UD=_sv('<path d="M8 4v16M4 8l4-4 4 4M16 20V4M12 16l4 4 4-4"/>'),SVG_UP=_sv('<path d="M12 20V4M6 10l6-6 6 6"/>'),SVG_DN=_sv('<path d="M12 4v16M6 14l6 6 6-6"/>');
 // versões do sistema
-const APP_VER='4.30';
+const APP_VER='4.31';
 const VERSOES=[
+ ['4.31','23/11/2026','Versão aparece no fim da página inicial (celular)'],
  ['4.30','23/11/2026','Ficha: nome e Fechar abaixo do relógio no app instalado (iPhone/iPad)'],
  ['4.29','23/11/2026','Ficha: botão Editar no telefone'],
  ['4.28','22/11/2026','Prospecção: segmentos Agro de insumos, máquinas e veterinária/agronomia'],
@@ -1590,7 +1591,7 @@ const VERSOES=[
 (function(){try{const st=navigator.standalone||matchMedia('(display-mode: standalone)').matches;const t=document.createElement('div');t.style.cssText='position:fixed;top:0;left:0;width:1px;visibility:hidden;height:env(safe-area-inset-top,0px)';document.body.appendChild(t);const ins=Math.round(t.getBoundingClientRect().height);t.remove();let sb=0;
   const ios=/iPhone|iPad|iPod/.test(navigator.userAgent)||(/Macintosh/.test(navigator.userAgent)&&navigator.maxTouchPoints>1);if(st&&ios&&ins<1){const ipad=/iPad/.test(navigator.userAgent)||/Macintosh/.test(navigator.userAgent);sb=ipad?24:(Math.max(screen.height,screen.width)>=812?54:20)}
   if(sb)document.documentElement.style.setProperty('--sbh',sb+'px');window.__TOPINFO='t'+ins+'/'+sb}catch(e){window.__TOPINFO='t?'}})();
-$('verBtn').textContent='Versão '+APP_VER+' · '+VERSOES[0][1]+(window.__TOPINFO?' · '+window.__TOPINFO:'');
+$('verBtn').textContent='Versão '+APP_VER+' · '+VERSOES[0][1]+(window.__TOPINFO?' · '+window.__TOPINFO:'');{const vm=$('verMob');if(vm)vm.textContent=$('verBtn').textContent;}
 $('verBtn').addEventListener('click',()=>{const m=document.createElement('div');m.className='verpop';m.innerHTML='<div class="vbox"><div class="row" style="justify-content:space-between"><b>Versões</b><button class="btn sm ghost" type="button" data-vclose>Fechar</button></div>'+VERSOES.map(v=>`<div class="vit"><b>${v[0]}</b><span class="hint">${v[1]}</span><div>${esc(v[2])}</div></div>`).join('')+'</div>';m.addEventListener('click',e=>{if(e.target===m||e.target.closest('[data-vclose]'))m.remove()});document.body.appendChild(m)});
 let KCLOSE={},KSORT={};try{KCLOSE=JSON.parse(localStorage.getItem('crm_kclose')||'{}');KSORT=JSON.parse(localStorage.getItem('crm_ksort')||'{}')}catch(e){}
 $('kanban').addEventListener('click',e=>{const t=e.target.closest('[data-ktog]'),s=e.target.closest('[data-ksort]');if(!t&&!s)return;e.stopPropagation();
