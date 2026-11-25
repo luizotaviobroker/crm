@@ -1521,8 +1521,9 @@ $('grid').addEventListener('click',e=>{const t=e.target.closest('[data-tgrp]');i
 const _sv=p=>`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px">${p}</svg>`;
 const SVG_UD=_sv('<path d="M8 4v16M4 8l4-4 4 4M16 20V4M12 16l4 4 4-4"/>'),SVG_UP=_sv('<path d="M12 20V4M6 10l6-6 6 6"/>'),SVG_DN=_sv('<path d="M12 4v16M6 14l6 6 6-6"/>');
 // versões do sistema
-const APP_VER='4.33';
+const APP_VER='4.34';
 const VERSOES=[
+ ['4.34','25/11/2026','Kanban arrasta para os lados também na área vazia; × para apagar campos'],
  ['4.33','24/11/2026','Meta diária: 100 ligações e 20 faladas'],
  ['4.32','23/11/2026','Agenda: filtro de CIC vale também para visitas e retornos da prospecção'],
  ['4.31','23/11/2026','Versão aparece no fim da página inicial (celular)'],
@@ -3019,6 +3020,28 @@ window.__prospInit=()=>{if(window.__prospStarted)return;window.__prospStarted=tr
 </script>
 
 <style>nav.bottom.kbhide{display:none!important}</style>
+<style>
+/* Kanban: a área vazia abaixo das colunas também arrasta para os lados */
+#kanban{min-height:calc(100dvh - 230px)}
+/* botão × para limpar campos */
+#clrBtn{position:fixed;z-index:9000;width:28px;height:28px;border-radius:50%;border:0;background:rgba(0,0,0,.12);color:#333;font:600 16px/28px system-ui,sans-serif;padding:0;display:flex;align-items:center;justify-content:center;cursor:pointer}
+#clrBtn[hidden]{display:none!important}
+input.hasclr,textarea.hasclr{padding-right:38px!important}
+</style>
+<button type="button" id="clrBtn" aria-label="Apagar o texto" hidden>×</button>
+<script>
+// × para apagar o campo inteiro (busca, nome, telefone, observação…)
+(()=>{const b=document.getElementById('clrBtn');let cur=null;
+const ok=e=>!!(e&&((e.tagName==='INPUT'&&/^(text|search|tel|email|url|number|)$/.test(e.type||'text'))||e.tagName==='TEXTAREA')&&!e.readOnly&&!e.disabled);
+const place=()=>{if(!cur||!cur.value||!document.contains(cur)){b.hidden=true;return}const r=cur.getBoundingClientRect();if(r.width<60||r.height<18){b.hidden=true;return}b.style.top=(r.top+(cur.tagName==='TEXTAREA'?8:r.height/2-14))+'px';b.style.left=(r.right-34)+'px';b.hidden=false};
+document.addEventListener('focusin',e=>{if(cur&&cur!==e.target)cur.classList.remove('hasclr');cur=ok(e.target)?e.target:null;if(cur)cur.classList.add('hasclr');place()});
+document.addEventListener('focusout',e=>{setTimeout(()=>{if(document.activeElement!==cur){if(cur)cur.classList.remove('hasclr');cur=null;b.hidden=true}},120)});
+document.addEventListener('input',e=>{if(e.target===cur)place()});
+window.addEventListener('scroll',place,true);window.addEventListener('resize',place);if(window.visualViewport)visualViewport.addEventListener('resize',place);
+b.addEventListener('pointerdown',e=>{e.preventDefault()});
+b.addEventListener('click',e=>{e.preventDefault();if(!cur)return;const t=cur;t.value='';t.dispatchEvent(new Event('input',{bubbles:true}));t.dispatchEvent(new Event('change',{bubbles:true}));t.focus();place()});
+})();
+</script>
 <script>
 // iPhone/iPad: com o teclado aberto a barra de baixo sobe e às vezes fica presa no meio da tela; esconde enquanto digita
 (()=>{const nb=document.querySelector('nav.bottom');if(!nb)return;
