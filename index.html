@@ -1521,8 +1521,9 @@ $('grid').addEventListener('click',e=>{const t=e.target.closest('[data-tgrp]');i
 const _sv=p=>`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px">${p}</svg>`;
 const SVG_UD=_sv('<path d="M8 4v16M4 8l4-4 4 4M16 20V4M12 16l4 4 4-4"/>'),SVG_UP=_sv('<path d="M12 20V4M6 10l6-6 6 6"/>'),SVG_DN=_sv('<path d="M12 4v16M6 14l6 6 6-6"/>');
 // versões do sistema
-const APP_VER='4.35';
+const APP_VER='4.36';
 const VERSOES=[
+ ['4.36','26/11/2026','Resumo: cada pessoa conta uma vez em Agendaram visita, mesmo se a visita foi salva de novo'],
  ['4.35','25/11/2026','Empresa com 2 ou 3 sócios: o CRM e a Agenda recebem os nomes de todos (quem atendeu primeiro)'],
  ['4.34','25/11/2026','Kanban arrasta para os lados também na área vazia; × para apagar campos'],
  ['4.33','24/11/2026','Meta diária: 100 ligações e 20 faladas'],
@@ -2931,7 +2932,7 @@ const RSG={fal:x=>FAL(x.h.s),retornar:x=>x.h.s==='retornar',agendou:x=>x.h.s==='
 function renderResumo(){const v=$('v-resumo');if(!v)return;if(!RS.from)rsSet(0);
   $('rsFrom').value=RS.from;$('rsTo').value=RS.to;$('rsFrom').max=$('rsTo').max=today();
   v.querySelectorAll('[data-rq]').forEach(b=>{const on=+b.dataset.rq===RS.q;b.classList.toggle('on',on);b.setAttribute('aria-pressed',on)});
-  const calls=rsCalls(),msgs=rsMsgs(),c=k=>calls.filter(RSG[k]).length;
+  const calls=rsCalls(),msgs=rsMsgs(),F=k=>{const a=calls.filter(RSG[k]);if(k!=='agendou')return a;const m=new Map();for(const x of a)m.set((x.L&&x.L.cnpj)||x.h.t,x);return [...m.values()]},c=k=>F(k).length;
   const nao=calls.filter(x=>x.h.s==='nao').length,fal=c('fal');
   $('rsSum').innerHTML=[['Ligações',calls.length],['Atenderam',fal,calls.length?Math.round(fal/calls.length*100)+'% das ligações':''],['Não atenderam',nao],['Mensagens enviadas',msgs.length],['Retornar',c('retornar')],['Agendaram visita',c('agendou')],['Sem interesse',c('sem')],['Número errado',c('errado')]]
     .map(([l,n,sub])=>`<div class="rsi"><span>${l}${sub?`<small>${sub}</small>`:''}</span><b>${n}</b></div>`).join('');
@@ -2940,7 +2941,7 @@ function renderResumo(){const v=$('v-resumo');if(!v)return;if(!RS.from)rsSet(0);
   v.querySelectorAll('details.rsg').forEach(d=>{const k=d.dataset.rg;if(RSO[k]!==undefined)d.open=RSO[k];
     if(k==='nao'){renderNao();return}
     const l=d.querySelector('[data-rl]');if(!d.open){l.innerHTML='';return}
-    const it=k==='msg'?msgs:calls.filter(RSG[k]);l.innerHTML=it.length?it.slice(0,400).map(rsRow).join('')+(it.length>400?`<div class="empty">Mostrando 400 de ${it.length}. Escolha um período menor.</div>`:''):'<div class="empty">Nada neste período.</div>'})}
+    const it=k==='msg'?msgs:F(k);l.innerHTML=it.length?it.slice(0,400).map(rsRow).join('')+(it.length>400?`<div class="empty">Mostrando 400 de ${it.length}. Escolha um período menor.</div>`:''):'<div class="empty">Nada neste período.</div>'})}
 document.addEventListener('toggle',e=>{const d=e.target;if(!d.matches||!d.matches('#p_v-resumo details.rsg'))return;RSO[d.dataset.rg]=d.open;if(d.open)renderResumo()},true);
 $('v-resumo').addEventListener('click',e=>{const b=e.target.closest('[data-rq]');if(b){rsSet(+b.dataset.rq);renderResumo()}});
 $('rsFrom').addEventListener('change',()=>{const a=$('rsFrom').value;if(!a)return;RS.from=a;if(!RS.to||RS.to<a)RS.to=a;RS.q=-1;renderResumo()});
