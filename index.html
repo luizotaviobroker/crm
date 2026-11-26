@@ -1521,8 +1521,9 @@ $('grid').addEventListener('click',e=>{const t=e.target.closest('[data-tgrp]');i
 const _sv=p=>`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px">${p}</svg>`;
 const SVG_UD=_sv('<path d="M8 4v16M4 8l4-4 4 4M16 20V4M12 16l4 4 4-4"/>'),SVG_UP=_sv('<path d="M12 20V4M6 10l6-6 6 6"/>'),SVG_DN=_sv('<path d="M12 4v16M6 14l6 6 6-6"/>');
 // versões do sistema
-const APP_VER='4.38';
+const APP_VER='4.39';
 const VERSOES=[
+ ['4.39','26/11/2026','Barra de baixo volta para o lugar depois do teclado (inclusive com a tela dividida)'],
  ['4.38','26/11/2026','Busca: quem você põe na lista de ligações some da pesquisa (Esconder quem já está na minha lista ligado por padrão)'],
  ['4.37','26/11/2026','No CRM, Retorno virou Follow-up; Retorno de ligação fica só para a prospecção. Agenda: Visitas, Retornos, Follow-up'],
  ['4.36','26/11/2026','Resumo: cada pessoa conta uma vez em Agendaram visita, mesmo se a visita foi salva de novo'],
@@ -3051,7 +3052,11 @@ b.addEventListener('click',e=>{e.preventDefault();if(!cur)return;const t=cur;t.v
 // iPhone/iPad: com o teclado aberto a barra de baixo sobe e às vezes fica presa no meio da tela; esconde enquanto digita
 (()=>{const nb=document.querySelector('nav.bottom');if(!nb)return;
 const isField=e=>!!(e&&e.matches&&e.matches('input:not([type=checkbox]):not([type=radio]):not([type=button]):not([type=submit]),textarea,[contenteditable=true]'));
-const upd=()=>{let f=false;try{f=document.hasFocus()&&document.visibilityState==='visible'&&isField(document.activeElement)}catch(e){}nb.classList.toggle('kbhide',f)};
+const renav=()=>{try{nb.style.display='none';void nb.offsetHeight;nb.style.display='';const y=window.scrollY;window.scrollTo(window.scrollX,y+1);window.scrollTo(window.scrollX,y)}catch(e){}};
+const upd=()=>{let f=false;try{f=document.hasFocus()&&document.visibilityState==='visible'&&isField(document.activeElement)}catch(e){}
+  const vv=window.visualViewport,kbOther=!!(vv&&!f&&vv.height<window.innerHeight*0.72);
+  nb.classList.toggle('kbhide',f||kbOther);clearTimeout(upd.t);upd.t=setTimeout(renav,320)};
+window.addEventListener('resize',upd);if(window.visualViewport)visualViewport.addEventListener('scroll',upd);document.addEventListener('scroll',()=>{clearTimeout(upd.s);upd.s=setTimeout(renav,200)},{passive:true});
 window.addEventListener('blur',()=>nb.classList.remove('kbhide'));window.addEventListener('focus',upd);document.addEventListener('visibilitychange',upd);document.addEventListener('pointerdown',()=>setTimeout(upd,250),true);
 document.addEventListener('focusin',upd);
 document.addEventListener('focusout',()=>setTimeout(()=>{upd();try{window.scrollTo(window.scrollX,window.scrollY)}catch(e){}},200));
