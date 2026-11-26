@@ -1521,8 +1521,9 @@ $('grid').addEventListener('click',e=>{const t=e.target.closest('[data-tgrp]');i
 const _sv=p=>`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px">${p}</svg>`;
 const SVG_UD=_sv('<path d="M8 4v16M4 8l4-4 4 4M16 20V4M12 16l4 4 4-4"/>'),SVG_UP=_sv('<path d="M12 20V4M6 10l6-6 6 6"/>'),SVG_DN=_sv('<path d="M12 4v16M6 14l6 6 6-6"/>');
 // versões do sistema
-const APP_VER='4.37';
+const APP_VER='4.38';
 const VERSOES=[
+ ['4.38','26/11/2026','Busca: quem você põe na lista de ligações some da pesquisa (Esconder quem já está na minha lista ligado por padrão)'],
  ['4.37','26/11/2026','No CRM, Retorno virou Follow-up; Retorno de ligação fica só para a prospecção. Agenda: Visitas, Retornos, Follow-up'],
  ['4.36','26/11/2026','Resumo: cada pessoa conta uma vez em Agendaram visita, mesmo se a visita foi salva de novo'],
  ['4.35','25/11/2026','Empresa com 2 ou 3 sócios: o CRM e a Agenda recebem os nomes de todos (quem atendeu primeiro)'],
@@ -2253,7 +2254,7 @@ function readF(){return{cnaes:[...state.cnaes],nats:[...state.nats],ex:[...state
   regime:$('regime').value,capMin:$('capMin').value,capMax:$('capMax').value,nome:$('nome').value,bairro:$('bairro').value,cep:$('cep').value,dq:radio('dq'),dFrom:$('dFrom').value,dTo:$('dTo').value,
   ct:radio('ct')||'any',soDono:$('soDono').checked,semCont:$('semCont').checked,semRep:$('semRep').checked,contab:$('contab').checked,hideList:$('hideList').checked,naoLig:$('naoLig').checked,uniq:$('uniq').checked,semNL:$('semNL').checked,ligDe:$('ligDe').value,ligAte:$('ligAte').value,lastRes:$('lastRes').value,idade:checked('idade'),temSocio:$('temSocio').checked,bndes:$('bndes').checked,govf:$('govf').checked,govEs:$('govEs').value,sort:$('sort').value,base:BASE,lista:LISTA,cidOff:[...$('cidade').querySelectorAll('input:not(:checked)')].map(i=>i.value)}}
 function writeF(f){
-  const D={cnaes:[],nats:[],ex:[],seg:-1,pri:true,sec:false,sit:['02'],tipo:['1'],porte:['01','03','05'],regime:'',capMin:'',capMax:'',nome:'',bairro:'',cep:'',dq:'old3',dFrom:'',dTo:'',ct:'cel',soDono:false,semCont:true,semRep:true,contab:true,hideList:false,naoLig:false,uniq:true,semNL:true,ligDe:'',ligAte:'',lastRes:'',idade:[],temSocio:false,bndes:false,govf:false,govEs:'',sort:'dono'};
+  const D={cnaes:[],nats:[],ex:[],seg:-1,pri:true,sec:false,sit:['02'],tipo:['1'],porte:['01','03','05'],regime:'',capMin:'',capMax:'',nome:'',bairro:'',cep:'',dq:'old3',dFrom:'',dTo:'',ct:'cel',soDono:false,semCont:true,semRep:true,contab:true,hideList:true,naoLig:false,uniq:true,semNL:true,ligDe:'',ligAte:'',lastRes:'',idade:[],temSocio:false,bndes:false,govf:false,govEs:'',sort:'dono'};
   f=Object.assign({},D,f||{});
   state.cnaes=f.cnaes;state.nats=f.nats;state.ex=f.ex;seg=f.seg;
   $('cnaePri').checked=f.pri;$('cnaeSec').checked=f.sec;
@@ -2983,7 +2984,7 @@ function renderSaved(){const s=store.get('pvg3_saved',{}),ks=Object.keys(s);
   $('savedList').innerHTML=ks.length?ks.map(k=>`<span class="tag"><button type="button" data-k="${esc(k)}" style="font-size:14px;font-weight:600">${esc(k)}</button><button type="button" data-del="${esc(k)}" aria-label="Apagar">×</button></span>`).join(''):'<span class="hint">Nenhuma ainda.</span>'}
 $('saveBtn').addEventListener('click',()=>{const n=$('saveName').value.trim();if(!n)return toast('Dê um nome para a pesquisa.');const s=store.get('pvg3_saved',{});s[n]=readF();store.set('pvg3_saved',s);$('saveName').value='';renderSaved();toast('Pesquisa salva')});
 $('savedList').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const s=store.get('pvg3_saved',{});if(b.dataset.del){delete s[b.dataset.del];store.set('pvg3_saved',s);renderSaved();return}writeF(s[b.dataset.k]);apply()});
-function restore(){renderSaved();writeF(store.get('pvg3_last',null))}
+function restore(){renderSaved();let f=store.get('pvg3_last',null);if(f&&!store.get('pvg3_hl1',false)){f=Object.assign({},f,{hideList:true});store.set('pvg3_hl1',true)}writeF(f)}
 $('reset').addEventListener('click',()=>{writeF({seg:-1});apply()});
 
 // ---------- eventos
