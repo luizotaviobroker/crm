@@ -848,6 +848,7 @@ nav.side .foot .verb:hover{text-decoration-color:currentColor}
 @media (max-width:600px){#v-trabalho.qopen .mtitle{display:none}}
 .kanban:where(:not(#v-prosp *):not(#prospHome *)){overscroll-behavior-x:contain}.kcol:where(:not(#v-prosp *):not(#prospHome *)) .kbody{overscroll-behavior-x:auto;overscroll-behavior-y:none}.dpanel,.dright .feed{overscroll-behavior:contain}
 html,body{overscroll-behavior-y:none}
+.listq{margin:0 0 10px}.listq input{width:100%;font-size:16px;padding:12px 14px;border-radius:12px}
 .act .top .cpn{padding:2px 10px;min-height:28px;font-size:13px;flex:0 0 auto}
 :is(#v-prosp,#prospHome) .segs{overscroll-behavior-x:none}
 :is(#v-prosp,#prospHome) aside.filters,:is(#v-prosp,#prospHome) aside.filters.open{overscroll-behavior:none}
@@ -1002,7 +1003,8 @@ table.grid tr.tgrp td.c-nome{border-left-width:4px;border-left-style:solid}
 
   <!-- BUSCAR -->
   <section class="view" id="p_v-busca">
-    <details class="socdet" id="socDet"><summary>Buscar sócio ou empresa <span class="hint">nome, razão social ou CNPJ</span></summary>
+    <div class="listq"><input type="search" id="lq" placeholder="Pesquisar na lista ou segmento escolhido: nome, empresa, sócio ou telefone" aria-label="Pesquisar na lista escolhida" autocomplete="off"></div>
+    <details class="socdet" id="socDet"><summary>Buscar em toda a base <span class="hint">sócio, empresa ou CNPJ em todo MT</span></summary>
       <form class="socform" id="socForm"><input type="search" id="socQ" placeholder="Ex.: João da Silva, Transportes Cuiabá, 12.345.678/0001-90" autocomplete="off" aria-label="Sócio, empresa ou CNPJ"><button class="btn primary" type="submit">Buscar</button></form>
     </details>
     <div class="funil" id="p_funil"></div>
@@ -1521,8 +1523,9 @@ $('grid').addEventListener('click',e=>{const t=e.target.closest('[data-tgrp]');i
 const _sv=p=>`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px">${p}</svg>`;
 const SVG_UD=_sv('<path d="M8 4v16M4 8l4-4 4 4M16 20V4M12 16l4 4 4-4"/>'),SVG_UP=_sv('<path d="M12 20V4M6 10l6-6 6 6"/>'),SVG_DN=_sv('<path d="M12 4v16M6 14l6 6 6-6"/>');
 // versões do sistema
-const APP_VER='4.42';
+const APP_VER='4.43';
 const VERSOES=[
+ ['4.43','26/11/2026','Busca: campo “Pesquisar na lista” no topo, que procura só na lista ou segmento escolhido'],
  ['4.42','26/11/2026','Busca por nome funciona em Minhas listas (nome, empresa, sócio e telefone)'],
  ['4.41','26/11/2026','Agenda: quem já está no CRM aparece só pela data do CRM (sem duplicar com a data antiga da prospecção)'],
  ['4.40','26/11/2026','Busca: “Pôr as 20 desta página na lista” tira as empresas da pesquisa na hora'],
@@ -1909,6 +1912,10 @@ function renderAgenda(){
   $('dayList').innerHTML=G.some(g=>g[2].length)?G.filter(g=>g[2].length).map(([k,nm,l])=>`<details class="dgrp${k==='atr'?' late':''}" data-dg="${k}" ${GO[k]?'open':''}><summary><span>${nm}</span><b>${k==='msg'?l.filter(m=>!m.ok).length+(l.some(m=>m.ok)?' de '+l.length:''):l.length}</b></summary><div class="dgl">${!GO[k]?'':k==='msg'?l.map(msgRow).join(''):(k==='atr'?l:l.sort((a,b)=>(a.proxH||a._p&&a._p.h||'99').localeCompare(b.proxH||b._p&&b._p.h||'99'))).map(c=>c._p?pCard(c):actCard(c)).join('')}</div></details>`).join(''):'<div class="empty">Nenhum contato marcado neste dia.</div>';
 }
 // busca de sócio dentro de Buscar empresas
+(()=>{const lq=document.getElementById('lq');try{const c=document.getElementById('p_count');const row=c&&c.parentElement;if(row&&row.parentElement){row.parentElement.insertBefore(lq.parentElement,row)}}catch(e){}let t;const pn=()=>document.getElementById('p_nome');
+  lq.addEventListener('input',()=>{clearTimeout(t);t=setTimeout(()=>{const n=pn();if(!n)return;n.value=lq.value;n.dispatchEvent(new Event('input',{bubbles:true}));n.dispatchEvent(new Event('change',{bubbles:true}))},300)});
+  lq.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();lq.blur()}});
+  document.addEventListener('input',e=>{if(e.target&&e.target.id==='p_nome'&&e.isTrusted)lq.value=e.target.value},true);})();
 document.getElementById('socForm').addEventListener('submit',e=>{e.preventDefault();const v=document.getElementById('socQ').value.trim();if(v.length<3){document.getElementById('socQ').focus();return}
   const q=document.getElementById('p_pq');document.getElementById('goSoc').click();setTimeout(()=>{if(q){q.value=v;q.dispatchEvent(new Event('input',{bubbles:true}))}},50)});
 // mensagens para enviar (vêm da prospecção) dentro da agenda
