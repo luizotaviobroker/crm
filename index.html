@@ -1372,10 +1372,10 @@ function renderFunnel(all){
   const fz=fora.filter(e=>order.includes(e)).map(e=>`<span class="tagx" style="background:var(--hover)">${esc(e)}: <b>${all.filter(c=>c.etapa===e).length}</b></span>`).join(' ');
   $('funnel').innerHTML=h+(fz?`<div class="row" style="margin-top:8px"><span class="hint">Fora do funil:</span> ${fz}</div>`:'')+'<p class="hint" style="margin:6px 0 0">Número grande = clientes parados na etapa hoje. Toque na etapa para abrir a lista.</p>';
 }
-const NXT=[['fup','Follow-up'],['visita','Visita'],['retorno','Retorno']];
+const NXT=[['visita','Visita'],['fup','Follow-up']];
 // tipo da próxima atividade: o que foi escolhido; sem escolha, quem está em "Agendou" é visita
 let NXEDIT=false,NXDONE=null;
-function proxTipo(c){return c.proxTipo||(c.etapa==='Agendou'?'visita':'fup')}
+function proxTipo(c){const t=c.proxTipo||(c.etapa==='Agendou'?'visita':'fup');return t==='retorno'?'fup':t}
 function actCard(c){
   const t=today();const late=c.proximo&&c.proximo<t;
   return `<div class="act" data-id="${c.id}"><div class="top"><span class="nm" data-open="${c.id}">${esc(c.nome)}</span><button class="btn sm ghost cpn" type="button" data-cpn="${esc(c.nome||"")}" title="Copiar nome">Copiar</button>${c.proximo?`<span class="${late?'late':'hint'}">${late?'Atrasado · ':''}${{visita:'Visita',retorno:'Retorno',fup:'Follow-up'}[proxTipo(c)]} · ${fmtD(c.proximo)}${c.proxH?' '+c.proxH:''}</span>`:''}</div>
@@ -1409,7 +1409,7 @@ document.addEventListener('toggle',e=>{const d=e.target;if(!(d instanceof HTMLDe
   if(d.open&&d.dataset.lz){const [k,id,dd,h,vis]=JSON.parse(d.dataset.lz);delete d.dataset.lz;const tmp=document.createElement('div');tmp.innerHTML=remBox(k,id,dd,h,!!vis,true);const body=tmp.querySelector('.remb');if(body)d.appendChild(body)}},true);
 // quadro de remarcar / editar (agenda e início)
 function remBox(k,id,d,h,vis,open){const r=k==='r';if(!open)return `<details class="rem" data-lz="${esc(JSON.stringify([k,id,d||'',h||'',vis?1:0]))}"><summary>✎ ${r?'Mudar data ou virar visita':vis?'Remarcar, mudar para retorno ou cancelar':'Editar data ou tipo'}</summary></details>`;return `<details class="rem" open><summary>✎ ${r?'Mudar data ou virar visita':vis?'Remarcar, mudar para retorno ou cancelar':'Editar data ou tipo'}</summary><div class="remb" data-rk="${k}" data-rid="${esc(id)}">
-  ${r?`<div class="nxt" role="radiogroup" aria-label="Tipo"><label><input type="radio" name="rt_${esc(id)}" value="retorno" checked> Retorno (ligar)</label><label><input type="radio" name="rt_${esc(id)}" value="visita"> Virou visita</label></div>`:(()=>{const cc=k==='c'?CLI[id]:null,tp=cc?(cc.proxTipo||(cc.etapa==='Agendou'?'visita':'fup')):'visita';return `<div class="nxt" role="radiogroup" aria-label="Tipo">${[['visita','Visita'],['retorno','Retorno (ligar)'],['fup','Follow-up']].map(([v,l])=>`<label><input type="radio" name="rt_${esc(k+id)}" value="${v}"${v===tp?' checked':''}> ${l}</label>`).join('')}</div>`})()}
+  ${r?`<div class="nxt" role="radiogroup" aria-label="Tipo"><label><input type="radio" name="rt_${esc(id)}" value="retorno" checked> Retorno (ligar)</label><label><input type="radio" name="rt_${esc(id)}" value="visita"> Virou visita</label></div>`:(()=>{const cc=k==='c'?CLI[id]:null,tp=cc?proxTipo(cc):'visita';return `<div class="nxt" role="radiogroup" aria-label="Tipo">${[['visita','Visita'],['fup','Follow-up']].concat(k==='c'?[]:[['retorno','Retorno (ligar)']]).map(([v,l])=>`<label><input type="radio" name="rt_${esc(k+id)}" value="${v}"${v===tp?' checked':''}> ${l}</label>`).join('')}</div>`})()}
   <div class="row"><input type="date" data-rd value="${esc(d||'')}" aria-label="Nova data"><input type="time" data-rh value="${esc(h||(r?'':''))}" aria-label="Horário"></div>
   ${r?'':'<input type="text" data-rm placeholder="Motivo (opcional). Ex.: cliente pediu para remarcar" maxlength="300">'}
   <div class="row"><button class="btn sm primary" type="button" data-remsave>Salvar nova data</button>${r?`<button class="btn sm ghost" type="button" data-remcancel>Tirar da agenda</button>`:vis?`<button class="btn sm ghost" type="button" data-remcancel>Cancelar visita</button>`:''}</div></div></details>`}
@@ -1521,8 +1521,9 @@ $('grid').addEventListener('click',e=>{const t=e.target.closest('[data-tgrp]');i
 const _sv=p=>`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px">${p}</svg>`;
 const SVG_UD=_sv('<path d="M8 4v16M4 8l4-4 4 4M16 20V4M12 16l4 4 4-4"/>'),SVG_UP=_sv('<path d="M12 20V4M6 10l6-6 6 6"/>'),SVG_DN=_sv('<path d="M12 4v16M6 14l6 6 6-6"/>');
 // versões do sistema
-const APP_VER='4.36';
+const APP_VER='4.37';
 const VERSOES=[
+ ['4.37','26/11/2026','No CRM, Retorno virou Follow-up; Retorno de ligação fica só para a prospecção. Agenda: Visitas, Retornos, Follow-up'],
  ['4.36','26/11/2026','Resumo: cada pessoa conta uma vez em Agendaram visita, mesmo se a visita foi salva de novo'],
  ['4.35','25/11/2026','Empresa com 2 ou 3 sócios: o CRM e a Agenda recebem os nomes de todos (quem atendeu primeiro)'],
  ['4.34','25/11/2026','Kanban arrasta para os lados também na área vazia; × para apagar campos'],
@@ -2035,7 +2036,7 @@ window.CRM_hasCnpj=cnpj=>Object.values(CLI).some(c=>c.cnpj===cnpj);
 window.CRM_find=(cnpj,tels)=>{const t8=new Set((tels||[]).map(t=>String(t||'').replace(/\D/g,'').slice(-8)).filter(x=>x.length===8));for(const c of Object.values(CLI)){if(cnpj&&c.cnpj===cnpj)return c;if(c.cel&&t8.has(String(c.cel).replace(/\D/g,'').slice(-8)))return c}return null};
 window.CRM_open=id=>{if(CLI[id])openDrawer(id)};
 window.CRM_fromProspect=(o,done)=>{
-  const d=new Date();d.setDate(d.getDate()+7);const dv=o.visita||o.retorno||d.toLocaleDateString('sv'),tv=o.visita?'visita':'retorno',hv=o.visita?(o.visitaH||'07:00'):'07:00';
+  const d=new Date();d.setDate(d.getDate()+7);const dv=o.visita||o.retorno||d.toLocaleDateString('sv'),tv=o.visita?'visita':'fup',hv=o.visita?(o.visitaH||'07:00'):'07:00';
   const ets=colById('etapa').options.map(x=>x.v), emps=(colById('emp').options||[]).map(x=>x.v);
   modal(`<h2>Criar no CRM</h2>
    <label class="hint">Nome do cliente</label><input type="text" id="pcNome" value="${esc(o.nome)}">
@@ -2053,7 +2054,7 @@ window.CRM_fromProspect=(o,done)=>{
      if(!e.target.closest('[data-ok]'))return;
      const now=new Date().toISOString(),et=$('pcEtapa').value,id='p'+o.cnpj;
      const obs=[o.atividade,o.bairro?'Bairro: '+o.bairro:'',o.capital?'Capital social: '+brl(o.capital):'',o.obs].filter(Boolean).join('\n');
-     const c={id,cnpj:o.cnpj,nome:$('pcNome').value.trim()||o.nome||o.empresa,cel:o.cel||'',empresa:o.empresa||'',etapa:et,proximo:$('pcProx').value,proxH:$('pcProx').value?($('pcH').value||''):'',proxTipo:(document.querySelector('input[name=pcTipo]:checked')||{}).value||'retorno',perfil:'',prioridade:'',emp:$('pcEmp').value?[$('pcEmp').value]:[],
+     const c={id,cnpj:o.cnpj,nome:$('pcNome').value.trim()||o.nome||o.empresa,cel:o.cel||'',empresa:o.empresa||'',etapa:et,proximo:$('pcProx').value,proxH:$('pcProx').value?($('pcH').value||''):'',proxTipo:(document.querySelector('input[name=pcTipo]:checked')||{}).value||'fup',perfil:'',prioridade:'',emp:$('pcEmp').value?[$('pcEmp').value]:[],
        origem:'Prospecção',cic:($('pcCic').value||'').trim(),tags:[],obs,custom:{},valor:'',previsao:'',
        updates:[{t:now,tipo:'comentario',txt:('Veio da prospecção.'+($('pcTxt').value.trim()?' '+$('pcTxt').value.trim():'')).slice(0,3000)}],
        log:[{t:now,etapa:et}],criado:now,upd:now,fonte:o.fonte&&o.fonte!=='Receita Federal'?'Lista '+o.fonte:'Prospecção (Receita Federal)'};
