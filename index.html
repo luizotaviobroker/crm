@@ -1521,8 +1521,9 @@ $('grid').addEventListener('click',e=>{const t=e.target.closest('[data-tgrp]');i
 const _sv=p=>`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px">${p}</svg>`;
 const SVG_UD=_sv('<path d="M8 4v16M4 8l4-4 4 4M16 20V4M12 16l4 4 4-4"/>'),SVG_UP=_sv('<path d="M12 20V4M6 10l6-6 6 6"/>'),SVG_DN=_sv('<path d="M12 4v16M6 14l6 6 6-6"/>');
 // versões do sistema
-const APP_VER='4.40';
+const APP_VER='4.41';
 const VERSOES=[
+ ['4.41','26/11/2026','Agenda: quem já está no CRM aparece só pela data do CRM (sem duplicar com a data antiga da prospecção)'],
  ['4.40','26/11/2026','Busca: “Pôr as 20 desta página na lista” tira as empresas da pesquisa na hora'],
  ['4.39','26/11/2026','Barra de baixo volta para o lugar depois do teclado (inclusive com a tela dividida)'],
  ['4.38','26/11/2026','Busca: quem você põe na lista de ligações some da pesquisa (Esconder quem já está na minha lista ligado por padrão)'],
@@ -1870,7 +1871,7 @@ function renderAgenda(){
   renderChips('aChips');
   document.querySelectorAll('[data-agf]').forEach(b=>b.setAttribute('aria-pressed',AGF.has(b.dataset.agf)));
   const by={};if(AGF.has('crm'))agendaRows().forEach(c=>(by[c.proximo]=by[c.proximo]||[]).push(c));
-  PEV={};const fAct=Object.entries(filters).filter(([k,v])=>v&&v.length),fOnlyCic=fAct.every(([k])=>k==='cic');if(AGF.has('pros')&&fOnlyCic)for(const e of (window.PROSP_events?window.PROSP_events():[])){const fc=filters.cic&&filters.cic.length?filters.cic:null;if(fc&&!fc.includes(e.cic||'(vazio)'))continue;const cli=window.CRM_find?window.CRM_find(e.cnpj,e.tels):null;if(cli&&cli.proximo===e.d)continue;
+  PEV={};const fAct=Object.entries(filters).filter(([k,v])=>v&&v.length),fOnlyCic=fAct.every(([k])=>k==='cic');if(AGF.has('pros')&&fOnlyCic)for(const e of (window.PROSP_events?window.PROSP_events():[])){const fc=filters.cic&&filters.cic.length?filters.cic:null;if(fc&&!fc.includes(e.cic||'(vazio)'))continue;const cli=window.CRM_find?window.CRM_find(e.cnpj,e.tels):null;if(cli&&cli.proximo)continue;
     const id='pp:'+e.tipo+':'+e.cnpj;PEV[id]=e;(by[e.d]=by[e.d]||[]).push({id,nome:e.nome,etapa:e.tipo==='visita'?'Visita (prospecção)':'Retorno (prospecção)',proximo:e.d,proxH:e.h,emp:[],_p:e})}Object.values(by).forEach(l=>l.sort((a,b)=>((a.proxH||'99:99').localeCompare(b.proxH||'99:99'))||a.nome.localeCompare(b.nome)));
   const m=calMonth;let h='';
   if(aView==='mes'){
