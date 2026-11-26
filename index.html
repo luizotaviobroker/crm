@@ -1521,8 +1521,9 @@ $('grid').addEventListener('click',e=>{const t=e.target.closest('[data-tgrp]');i
 const _sv=p=>`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px">${p}</svg>`;
 const SVG_UD=_sv('<path d="M8 4v16M4 8l4-4 4 4M16 20V4M12 16l4 4 4-4"/>'),SVG_UP=_sv('<path d="M12 20V4M6 10l6-6 6 6"/>'),SVG_DN=_sv('<path d="M12 4v16M6 14l6 6 6-6"/>');
 // versões do sistema
-const APP_VER='4.39';
+const APP_VER='4.40';
 const VERSOES=[
+ ['4.40','26/11/2026','Busca: “Pôr as 20 desta página na lista” tira as empresas da pesquisa na hora'],
  ['4.39','26/11/2026','Barra de baixo volta para o lugar depois do teclado (inclusive com a tela dividida)'],
  ['4.38','26/11/2026','Busca: quem você põe na lista de ligações some da pesquisa (Esconder quem já está na minha lista ligado por padrão)'],
  ['4.37','26/11/2026','No CRM, Retorno virou Follow-up; Retorno de ligação fica só para a prospecção. Agenda: Visitas, Retornos, Follow-up'],
@@ -2648,7 +2649,7 @@ async function addLeads(items){
     if(!L)todo.push(leadFrom(x));
     else if(!inList(L))todo.push(Object.assign({},L,{inList:true,status:'novo',statusT:'',upd:new Date().toISOString()}));}
   if(!todo.length){toast('Essas empresas já estão na sua lista.');return}
-  todo.forEach(L=>LEADS[L.cnpj]=L);render();renderLeads();
+  todo.forEach(L=>LEADS[L.cnpj]=L);if(readF().hideList)apply();else render();renderLeads();
   const res=await Promise.all(todo.map(put));const ok=res.filter(Boolean).length;
   toast(ok===1?'1 empresa adicionada à sua lista':`${ok} empresas adicionadas à sua lista`);
 }
