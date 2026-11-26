@@ -1521,8 +1521,9 @@ $('grid').addEventListener('click',e=>{const t=e.target.closest('[data-tgrp]');i
 const _sv=p=>`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px">${p}</svg>`;
 const SVG_UD=_sv('<path d="M8 4v16M4 8l4-4 4 4M16 20V4M12 16l4 4 4-4"/>'),SVG_UP=_sv('<path d="M12 20V4M6 10l6-6 6 6"/>'),SVG_DN=_sv('<path d="M12 4v16M6 14l6 6 6-6"/>');
 // versões do sistema
-const APP_VER='4.41';
+const APP_VER='4.42';
 const VERSOES=[
+ ['4.42','26/11/2026','Busca por nome funciona em Minhas listas (nome, empresa, sócio e telefone)'],
  ['4.41','26/11/2026','Agenda: quem já está no CRM aparece só pela data do CRM (sem duplicar com a data antiga da prospecção)'],
  ['4.40','26/11/2026','Busca: “Pôr as 20 desta página na lista” tira as empresas da pesquisa na hora'],
  ['4.39','26/11/2026','Barra de baixo volta para o lugar depois do teclado (inclusive com a tela dividida)'],
@@ -2137,7 +2138,7 @@ function toast(t){const el=$('toast');el.textContent=t;el.hidden=false;clearTime
 const titleCase=s=>(s||'').toLowerCase().replace(/(^|\s)\S/g,m=>m.toUpperCase());
 
 // ---------- dados
-function prep(rows){for(const r of rows){if(r[26]===undefined){r[26]='Várzea Grande';r[27]='Receita Federal'}r.txt=norm(r[C.razao]+' '+r[C.fant]+' '+r[C.soc].map(s=>s[0]).join(' '))}}
+function prep(rows){for(const r of rows){if(r[26]===undefined){r[26]='Várzea Grande';r[27]='Receita Federal'}r.txt=norm(r[C.razao]+' '+r[C.fant]+' '+r[C.soc].map(s=>s[0]).join(' '))+' '+(r[C.tels]||[]).join(' ')}}
 async function load(){
   try{
     const d=await gzJson('mtb/base_vg.b64.txt');
@@ -2298,7 +2299,7 @@ function apply(){
     if(f.bndes&&!((BND.get(r[0])||[])[1]))continue;
     if(f.govf&&(!(govEsV(GOV.get(r[0]),f.govEs)>0)||!String(r[C.nat]).startsWith('2')))continue;
     }
-    if(words.length&&!words.every(w=>r.txt.includes(w)))continue;
+    if(words.length&&!words.every(w=>(r.txt||'').includes(w)))continue;
     if(bairro&&!norm(r[C.bairro]).includes(bairro))continue;
     if(f.temSocio&&!r[C.soc].length&&!ownerOf(r))continue;
     if(idade.size&&!r[C.soc].some(s=>idade.has(s[2])||(idade.has('71-80')&&s[2]==='80+')))continue;
@@ -2323,7 +2324,7 @@ function apply(){
   out.sort(s==='dono'?(a,b)=>(b.dono-a.dono)||(b.r[C.cap]-a.r[C.cap]):s==='cap'?(a,b)=>b.r[C.cap]-a.r[C.cap]:s==='old'?(a,b)=>a.r[C.ini].localeCompare(b.r[C.ini]):s==='bnd'?(a,b)=>((BND.get(b.r[0])||[0])[0]-(BND.get(a.r[0])||[0])[0])||(b.dono-a.dono):s==='gov'?(a,b)=>(govEsV(GOV.get(b.r[0]),f.govEs)-govEsV(GOV.get(a.r[0]),f.govEs))||(b.dono-a.dono):(a,b)=>b.r[C.ini].localeCompare(a.r[C.ini]));
   filtered=out;page=0;renderApplied(f);
   // busca por nome: avisa quantas empresas com esse nome os filtros esconderam
-  if(words.length){let all=0;const shown=new Set(out.map(o=>o.r[0]));for(const r of ROWS){if((f.base==='listas')===(r[27]==='Receita Federal'))continue;if(words.every(w=>r.txt.includes(w)))all++}
+  if(words.length){let all=0;const shown=new Set(out.map(o=>o.r[0]));for(const r of ROWS){if((f.base==='listas')===(r[27]==='Receita Federal'))continue;if(words.every(w=>(r.txt||'').includes(w)))all++}
     const hid=all-shown.size;if(hid>0)$('applied').insertAdjacentHTML('beforeend',`<span class="hidn">+${hid} com “${esc(f.nome)}” escondida(s) pelos filtros (sem celular, filial, porte, situação…) <button type="button" class="lnk" data-tosoc="${esc(f.nome)}">ver todas em Sócios ›</button></span>`)}
   render();
 }
@@ -2424,7 +2425,8 @@ async function loadLists(){
 }
 function listRow(o,L,part,i){
   const tels=(o.tels||[]).filter(Boolean);
-  return [`L${L.id}_${part}_${i}`,o.empresa||o.nome||'',o.empresa?'':'', '1','02','','',[],'',0,'',0,0,o.end||'','',o.obs||'',o.bairro||'','',tels,(o.email||'').toLowerCase(),o.nome?[[o.nome,'','']]:[],'','',tels.map(()=>1),0,tels.map(t=>'l'),o.cidade||L.cidade||'Sem cidade',L.nome,o.h||[],o.nl?1:0];
+  const a=[`L${L.id}_${part}_${i}`,o.empresa||o.nome||'',o.empresa?'':'', '1','02','','',[],'',0,'',0,0,o.end||'','',o.obs||'',o.bairro||'','',tels,(o.email||'').toLowerCase(),o.nome?[[o.nome,'','']]:[],'','',tels.map(()=>1),0,tels.map(t=>'l'),o.cidade||L.cidade||'Sem cidade',L.nome,o.h||[],o.nl?1:0];
+  a.txt=norm([o.nome,o.empresa,o.bairro,o.cidade,o.obs].filter(Boolean).join(' '))+' '+tels.join(' ');return a;
 }
 function normTelBR(s){let d=String(s||'').replace(/\D/g,'');if(d.startsWith('55')&&d.length>=12)d=d.slice(2);if(d.startsWith('0'))d=d.slice(1);
   if(d.length===8&&'6789'.includes(d[0]))d='659'+d;else if(d.length===9&&d[0]==='9')d='65'+d;else if(d.length===10&&'6789'.includes(d[2]))d=d.slice(0,2)+'9'+d.slice(2);return d.length>=10?d:''}
