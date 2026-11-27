@@ -980,6 +980,7 @@ table.grid tr.tgrp td.c-nome{border-left-width:4px;border-left-style:solid}
         <span class="hint" id="aCount"></span>
       </div>
       <div class="chips" id="aChips"></div>
+      <div class="listq"><input type="search" id="aQ" placeholder="Pesquisar nome, empresa ou telefone na agenda" aria-label="Pesquisar na agenda" autocomplete="off"></div>
       <div id="aBody"></div>
       <div class="box" style="margin-top:16px" id="aDayBox"><div class="bh"><h2 id="dayTitle"></h2><button class="btn sm primary" type="button" id="dayHoje" hidden>Voltar para hoje</button></div><div class="scroll" id="dayList" style="max-height:none"></div></div>
     </section>
@@ -1523,8 +1524,9 @@ $('grid').addEventListener('click',e=>{const t=e.target.closest('[data-tgrp]');i
 const _sv=p=>`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px">${p}</svg>`;
 const SVG_UD=_sv('<path d="M8 4v16M4 8l4-4 4 4M16 20V4M12 16l4 4 4-4"/>'),SVG_UP=_sv('<path d="M12 20V4M6 10l6-6 6 6"/>'),SVG_DN=_sv('<path d="M12 4v16M6 14l6 6 6-6"/>');
 // versões do sistema
-const APP_VER='4.43';
+const APP_VER='4.44';
 const VERSOES=[
+ ['4.44','27/11/2026','Agenda: campo de pesquisa por nome, empresa ou telefone'],
  ['4.43','26/11/2026','Busca: campo “Pesquisar na lista” no topo, que procura só na lista ou segmento escolhido'],
  ['4.42','26/11/2026','Busca por nome funciona em Minhas listas (nome, empresa, sócio e telefone)'],
  ['4.41','26/11/2026','Agenda: quem já está no CRM aparece só pela data do CRM (sem duplicar com a data antiga da prospecção)'],
@@ -1876,7 +1878,8 @@ function renderAgenda(){
   document.querySelectorAll('[data-agf]').forEach(b=>b.setAttribute('aria-pressed',AGF.has(b.dataset.agf)));
   const by={};if(AGF.has('crm'))agendaRows().forEach(c=>(by[c.proximo]=by[c.proximo]||[]).push(c));
   PEV={};const fAct=Object.entries(filters).filter(([k,v])=>v&&v.length),fOnlyCic=fAct.every(([k])=>k==='cic');if(AGF.has('pros')&&fOnlyCic)for(const e of (window.PROSP_events?window.PROSP_events():[])){const fc=filters.cic&&filters.cic.length?filters.cic:null;if(fc&&!fc.includes(e.cic||'(vazio)'))continue;const cli=window.CRM_find?window.CRM_find(e.cnpj,e.tels):null;if(cli&&cli.proximo)continue;
-    const id='pp:'+e.tipo+':'+e.cnpj;PEV[id]=e;(by[e.d]=by[e.d]||[]).push({id,nome:e.nome,etapa:e.tipo==='visita'?'Visita (prospecção)':'Retorno (prospecção)',proximo:e.d,proxH:e.h,emp:[],_p:e})}Object.values(by).forEach(l=>l.sort((a,b)=>((a.proxH||'99:99').localeCompare(b.proxH||'99:99'))||a.nome.localeCompare(b.nome)));
+    const id='pp:'+e.tipo+':'+e.cnpj;PEV[id]=e;(by[e.d]=by[e.d]||[]).push({id,nome:e.nome,etapa:e.tipo==='visita'?'Visita (prospecção)':'Retorno (prospecção)',proximo:e.d,proxH:e.h,emp:[],_p:e})}{const nrm=x=>String(x||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();const qv=(document.getElementById('aQ')||{}).value||'';const qn=nrm(qv.trim()),qd=qv.replace(/\D/g,'');if(qn){for(const k of Object.keys(by)){by[k]=by[k].filter(c=>{const e=c._p;const tx=nrm([c.nome,c.empresa,e&&e.empresa,e&&e.nome].filter(Boolean).join(' '));const tl=[c.cel].concat(e?e.tels:[]).filter(Boolean).map(x=>String(x).replace(/\D/g,'')).join(' ');return qn.split(/\s+/).every(w=>tx.includes(w))||(qd.length>=4&&tl.includes(qd))});if(!by[k].length)delete by[k]}}}
+  Object.values(by).forEach(l=>l.sort((a,b)=>((a.proxH||'99:99').localeCompare(b.proxH||'99:99'))||a.nome.localeCompare(b.nome)));
   const m=calMonth;let h='';
   if(aView==='mes'){
     $('cLbl').textContent=mesNome(m);
@@ -1940,6 +1943,7 @@ document.querySelectorAll('[data-av]').forEach(b=>b.addEventListener('click',()=
 const shiftA=n=>{if(aView==='semana'){const d=new Date(selDay+'T12:00');d.setDate(d.getDate()+7*n);selDay=d.toLocaleDateString('sv');calMonth=new Date(d.getFullYear(),d.getMonth(),1)}else{calMonth=new Date(calMonth.getFullYear(),calMonth.getMonth()+n,1)}renderAgenda()};
 $('cPrev').addEventListener('click',()=>shiftA(-1));$('cNext').addEventListener('click',()=>shiftA(1));
 $('cToday').addEventListener('click',()=>{selDay=today();calMonth=new Date();renderAgenda()});
+{let aqT;$('aQ').addEventListener('input',()=>{clearTimeout(aqT);aqT=setTimeout(renderAgenda,250)})}
 $('dayHoje').addEventListener('click',()=>{selDay=today();calMonth=new Date();renderAgenda()});
 // ao abrir a Agenda, sempre começa no dia de hoje
 document.addEventListener('click',e=>{if(e.target.closest('[data-go="agenda"]')){selDay=null;calMonth=new Date()}},true);
